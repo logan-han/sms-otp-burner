@@ -1,0 +1,57 @@
+{
+  "name": "sms-otp-burner",
+  "version": "1.0.0",
+  "description": "A simple website to lease a virtual number and display OTPs using React frontend",
+  "license": "MIT",
+  "scripts": {
+    "start:backend": "export $(cat .env | xargs) && serverless offline start",
+    "start:react": "react-scripts start",
+    "build:react": "react-scripts build",
+    "test:frontend": "react-scripts test --testPathIgnorePatterns=src/__tests__/backend --testPathIgnorePatterns=src/__tests__/__mocks__",
+    "test:backend": "jest --config=jest.backend.config.js",
+    "test": "yarn test:frontend --watchAll=false && yarn test:backend",
+    "start": "concurrently \"yarn start:backend\" \"yarn start:react\"",
+    "deploy": "yarn build:react && serverless deploy",
+    "clean": "rm -rf node_modules yarn.lock && yarn install"
+  },
+  "dependencies": {
+    "@testing-library/dom": "^10.4.0",
+    "@testing-library/jest-dom": "^6.6.3",
+    "@testing-library/react": "^16.3.0",
+    "@testing-library/user-event": "^13.5.0",
+    "axios": "^1.6.8",
+    "mime-types": "^3.0.1",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "react-scripts": "5.0.1",
+    "web-vitals": "^2.1.4"
+  },
+  "devDependencies": {
+    "babel-jest": "^30.0.1",
+    "concurrently": "^8.2.2",
+    "identity-obj-proxy": "^3.0.0",
+    "jest": "^27.5.1",
+    "jest-transform-css": "^6.0.3",
+    "serverless": "^3.38.0",
+    "serverless-dotenv-plugin": "^6.0.0",
+    "serverless-offline": "^13.3.3"
+  },
+  "eslintConfig": {
+    "extends": [
+      "react-app",
+      "react-app/jest"
+    ]
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  }
+}
