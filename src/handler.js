@@ -501,8 +501,19 @@ module.exports.serveFrontend = async (event) => {
     console.log('Frontend handler - Requested path:', requestedPath);
 
     // Construct the full path to the file in the frontend build directory
-    const filePath = path.resolve(__dirname, '..', 'build', requestedPath);
+    const buildDir = path.resolve(__dirname, '..', 'build');
+    const filePath = path.resolve(buildDir, requestedPath);
     console.log('Frontend handler - File path:', filePath);
+
+    // Ensure the resolved filePath is within the build directory
+    if (!filePath.startsWith(buildDir)) {
+        console.error('Frontend handler - Attempted access outside build directory:', filePath);
+        return {
+            statusCode: 403,
+            headers: { 'Content-Type': 'text/html', 'Access-Control-Allow-Origin': '*' },
+            body: '<html><body><h1>403 Forbidden</h1><p>Access denied.</p></body></html>',
+        };
+    }
 
     try {
         if (fs.existsSync(filePath)) {
