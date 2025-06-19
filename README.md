@@ -7,45 +7,23 @@ Lease virtual numbers from Telstra & display SMS received from the numbers.
 
 Uses [Telstra Messaging API](https://dev.telstra.com/apis/messaging-api).
 
-## Features
-
-- **Configurable Number Count**: Set how many virtual numbers to lease (default: 1 for trial accounts)
-- **Multiple Number Support**: Display and manage multiple virtual numbers simultaneously
-- **Multi-Number Messaging**: View messages from all leased numbers in a unified interface
-- **Environment Variable Configuration**: Use `MAX_LEASED_NUMBER_COUNT` to increase numbers for paid accounts
-
-## Installation
-
-```bash
-yarn install
-```
-
 ## Development
 
 ```bash
-# Start both backend and frontend in development mode
+# Install dependencies
+yarn install
+
+# Start dev env
 yarn start
-
-# Start only frontend  
-yarn start:react
-
-# Start only backend
-yarn start:backend
-
-# Build for production
-yarn build:react
 
 # Run tests
 yarn test
-
-# Run only React tests
-yarn test:react
-
-# Run only backend tests
-yarn test:backend
 ```
 
 ## Config
+
+Default 1 virtual number supported as that's the maximum for free Telstra dev account.
+Set `MAX_LEASED_NUMBER_COUNT` environment variable to increase the number.
 
 Requires below GitHub Actions secrets:
 `AWS_ACCESS_KEY_ID`
@@ -53,31 +31,6 @@ Requires below GitHub Actions secrets:
 `SERVERLESS_ACCESS_KEY`
 `TELSTRA_CLIENT_ID`
 `TELSTRA_CLIENT_SECRET`
-
-### GitHub Actions Configuration
-
-To configure the maximum number of virtual numbers via GitHub Actions:
-
-#### Option 1: Repository Variables (Recommended)
-
-1. Go to your repository → Settings → Secrets and variables → Actions
-2. Click the "Variables" tab
-3. Add a new repository variable:
-   - Name: `MAX_LEASED_NUMBER_COUNT`
-   - Value: `1` (or higher for paid accounts)
-
-#### Option 2: Manual Deployment
-
-1. Go to Actions → Deploy workflow
-2. Click "Run workflow"
-3. Enter the desired number in "Maximum number of virtual numbers to lease"
-4. Click "Run workflow"
-
-### Optional Environment Variables
-
-- `MAX_LEASED_NUMBER_COUNT`: Number of virtual numbers to lease (default: 1)
-  - Trial accounts: Limited to 1 number
-  - Paid accounts: Can set higher values (e.g., `MAX_LEASED_NUMBER_COUNT=3`)
 
 ## Try
 
