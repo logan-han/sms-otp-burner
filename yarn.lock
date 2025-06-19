@@ -5700,7 +5700,7 @@ cookie@0.7.1:
   resolved "https://registry.npmjs.org/cookie/-/cookie-0.7.1.tgz"
   integrity sha512-6DnInpx7SJ2AK3+CTUE/ZM0vWTUboZCegxhC2xiIydHR9jNuTAASBrfEpHhiGOZw/nX51bHt6YQl8jsGo4y/0w==
 
-cookiejar@^2.1.3, cookiejar@^2.1.4:
+cookiejar@^2.1.3:
   version "2.1.4"
   resolved "https://registry.npmjs.org/cookiejar/-/cookiejar-2.1.4.tgz"
   integrity sha512-LDx6oHrK+PhzLKJU9j5S7/Y3jM/mUHvD/DeI1WQmJn652iPC5Y4TBzC9l+5OMOXlyTTA+SmVUPm0HQUwpD5Jqw==
@@ -7486,15 +7486,6 @@ formidable@^2.0.1:
     dezalgo "^1.0.4"
     once "^1.4.0"
     qs "^6.11.0"
-
-formidable@^3.5.4:
-  version "3.5.4"
-  resolved "https://registry.npmjs.org/formidable/-/formidable-3.5.4.tgz"
-  integrity sha512-YikH+7CUTOtP44ZTnUhR7Ic2UASBPOqmaRkRKxRbywPTe5VxF7RRCck4af9wutiZ/QKM5nME9Bie2fFaPz5Gug==
-  dependencies:
-    "@paralleldrive/cuid2" "^2.2.2"
-    dezalgo "^1.0.4"
-    once "^1.4.0"
 
 forwarded@0.2.0:
   version "0.2.0"
@@ -12709,21 +12700,6 @@ sucrase@^3.35.0:
     pirates "^4.0.1"
     ts-interface-checker "^0.1.9"
 
-superagent@^10.2.1:
-  version "10.2.1"
-  resolved "https://registry.npmjs.org/superagent/-/superagent-10.2.1.tgz"
-  integrity sha512-O+PCv11lgTNJUzy49teNAWLjBZfc+A1enOwTpLlH6/rsvKcTwcdTT8m9azGkVqM7HBl5jpyZ7KTPhHweokBcdg==
-  dependencies:
-    component-emitter "^1.3.0"
-    cookiejar "^2.1.4"
-    debug "^4.3.4"
-    fast-safe-stringify "^2.1.1"
-    form-data "^4.0.0"
-    formidable "^3.5.4"
-    methods "^1.1.2"
-    mime "2.6.0"
-    qs "^6.11.0"
-
 superagent@^7.1.6:
   version "7.1.6"
   resolved "https://registry.npmjs.org/superagent/-/superagent-7.1.6.tgz"
@@ -12740,14 +12716,6 @@ superagent@^7.1.6:
     qs "^6.10.3"
     readable-stream "^3.6.0"
     semver "^7.3.7"
-
-supertest@^7.1.1:
-  version "7.1.1"
-  resolved "https://registry.npmjs.org/supertest/-/supertest-7.1.1.tgz"
-  integrity sha512-aI59HBTlG9e2wTjxGJV+DygfNLgnWbGdZxiA/sgrnNNikIW8lbDvCtF6RnhZoJ82nU7qv7ZLjrvWqCEm52fAmw==
-  dependencies:
-    methods "^1.1.2"
-    superagent "^10.2.1"
 
 supports-color@^5.3.0:
   version "5.5.0"
@@ -13501,10 +13469,10 @@ wcwidth@^1.0.1:
   dependencies:
     defaults "^1.0.3"
 
-web-vitals@^2.1.4:
-  version "2.1.4"
-  resolved "https://registry.npmjs.org/web-vitals/-/web-vitals-2.1.4.tgz"
-  integrity sha512-sVWcwhU5mX6crfI5Vd2dC4qchyTqxV8URinzt25XqVh+bHEPGH4C3NPrNionCP7Obx59wrYEbNlw4Z8sjALzZg==
+web-vitals@^5.0.3:
+  version "5.0.3"
+  resolved "https://registry.yarnpkg.com/web-vitals/-/web-vitals-5.0.3.tgz#29708ca3ab7ff96f676c6ff68fa8e8ed09a93d9b"
+  integrity sha512-4KmOFYxj7qT6RAdCH0SWwq8eKeXNhAFXR4PmgF6nrWFmrJ41n7lq3UCA6UK0GebQ4uu+XP8e8zGjaDO3wZlqTg==
 
 webidl-conversions@^3.0.0:
   version "3.0.1"
