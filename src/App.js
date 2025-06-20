@@ -145,6 +145,9 @@ function App() {
                   <div key={number.virtualNumber || number.msisdn} className="number-item">
                     <div className={`number-display ${leasedNumbers.length === 1 ? 'single-number' : ''}`}>
                       <span className="number-value">{number.virtualNumber || number.msisdn}</span>
+                      <button className="copy-btn" onClick={() => navigator.clipboard.writeText(number.virtualNumber || number.msisdn)} title="Copy number">
+                        📋
+                      </button>
                     </div>
                   </div>
                 ))}
