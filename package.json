@@ -27,7 +27,7 @@
     "web-vitals": "^2.1.4"
   },
   "devDependencies": {
-    "babel-jest": "^30.0.1",
+    "babel-jest": "^30.0.2",
     "concurrently": "^8.2.2",
     "identity-obj-proxy": "^3.0.0",
     "jest": "^27.5.1",
