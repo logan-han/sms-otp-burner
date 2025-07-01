@@ -247,6 +247,51 @@ describe('App Component', () => {
     });
   });
 
+  test('clipboard button shows checkmark when clicked', async () => {
+    const mockNumber = {
+      msisdn: '+61412345678',
+      virtualNumber: '+61412345678',
+      subscriptionId: 'sub123',
+      expiryDate: new Date(Date.now() + 86400000).toISOString(),
+      expiresAt: new Date(Date.now() + 86400000).toISOString()
+    };
+
+    fetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ virtualNumbers: [mockNumber] })
+    });
+
+    // Mock clipboard API
+    Object.assign(navigator, {
+      clipboard: {
+        writeText: jest.fn().mockImplementation(() => Promise.resolve())
+      }
+    });
+
+    render(<App />);
+
+    await waitFor(() => {
+      expect(screen.getByText('+61412345678')).toBeInTheDocument();
+    });
+    
+    // Find the clipboard button and click it
+    const clipboardButton = screen.getByTitle('Copy number');
+    fireEvent.click(clipboardButton);
+    
+    // Check that the clipboard API was called with the correct number
+    expect(navigator.clipboard.writeText).toHaveBeenCalledWith('+61412345678');
+    
+    // Check that the checkmark emoji is displayed
+    expect(screen.getByTitle('Copied!')).toBeInTheDocument();
+    expect(screen.getByText('✅')).toBeInTheDocument();
+    
+    // Wait for the checkmark to change back to clipboard
+    await waitFor(() => {
+      expect(screen.queryByText('✅')).not.toBeInTheDocument();
+      expect(screen.getByText('📋')).toBeInTheDocument();
+    }, { timeout: 3000 });
+  });
+
   test('handles multiple virtual numbers display', async () => {
     const mockNumbers = [
       {
