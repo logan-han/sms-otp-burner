@@ -4,11 +4,20 @@ import './App.css';
 const API_BASE_URL = process.env.NODE_ENV === 'development' ? '/api' : '/api';
 
 function App() {
+  const [copiedNumber, setCopiedNumber] = useState(null);
   const [leasedNumbers, setLeasedNumbers] = useState([]);
   const [messages, setMessages] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
   const [hasCheckedNumbers, setHasCheckedNumbers] = useState(false);
+
+  const handleCopyNumber = (number) => {
+    navigator.clipboard.writeText(number);
+    setCopiedNumber(number);
+    setTimeout(() => {
+      setCopiedNumber(null);
+    }, 2000);
+  };
 
   const handleError = (message, err) => {
     console.error(message, err);
@@ -145,8 +154,12 @@ function App() {
                   <div key={number.virtualNumber || number.msisdn} className="number-item">
                     <div className={`number-display ${leasedNumbers.length === 1 ? 'single-number' : ''}`}>
                       <span className="number-value">{number.virtualNumber || number.msisdn}</span>
-                      <button className="copy-btn" onClick={() => navigator.clipboard.writeText(number.virtualNumber || number.msisdn)} title="Copy number">
-                        📋
+                      <button 
+                        className="copy-btn" 
+                        onClick={() => handleCopyNumber(number.virtualNumber || number.msisdn)} 
+                        title={copiedNumber === (number.virtualNumber || number.msisdn) ? "Copied!" : "Copy number"}
+                      >
+                        {copiedNumber === (number.virtualNumber || number.msisdn) ? '✅' : '📋'}
                       </button>
                     </div>
                   </div>
