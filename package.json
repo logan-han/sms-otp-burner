@@ -30,7 +30,7 @@
     "babel-jest": "^30.0.1",
     "concurrently": "^8.2.2",
     "identity-obj-proxy": "^3.0.0",
-    "jest": "^27.5.1",
+    "jest": "^30.0.4",
     "jest-transform-css": "^6.0.3",
     "serverless": "^3.38.0",
     "serverless-dotenv-plugin": "^6.0.0",
