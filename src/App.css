@@ -102,48 +102,11 @@ body {
   font-size: 1.4em;
 }
 
-.change-number-btn {
-  background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
-  color: white;
-  border: none;
-  padding: 10px 20px;
-  border-radius: 8px;
-  cursor: pointer;
-  font-weight: 600;
-  font-size: 0.9em;
-  transition: all 0.2s ease;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.change-number-btn:hover:not(:disabled) {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
-}
-
-.change-number-btn:disabled {
-  background: #a0aec0;
-  cursor: not-allowed;
-  transform: none;
-  box-shadow: none;
-}
-
 .number-details {
   padding: 25px;
   display: flex;
   flex-direction: column;
   gap: 15px;
-}
-
-.number-display {
-  display: flex;
-  align-items: center;
-  gap: 15px;
-  margin-bottom: 8px;
-  justify-content: flex-start;
-  padding: 15px;
-  background: white;
-  border-radius: 8px;
-  border: 2px solid #4c63d2;
 }
 
 .number-label {
@@ -154,35 +117,14 @@ body {
 
 .number-value {
   font-family: 'Courier New', monospace;
-  font-size: 1.3em;
+  font-size: 1.1em;
   font-weight: 700;
-  color: #4c63d2;
-  letter-spacing: 1px;
-}
-
-.subscription-detail, .expiry-detail {
-  display: flex;
-  align-items: center;
-  gap: 15px;
-  padding: 10px 15px;
+  color: #2d3436;
   background: white;
-  border-radius: 6px;
-}
-
-.detail-label {
-  font-weight: 600;
-  color: #4a5568;
-  min-width: 120px;
-}
-
-.detail-value {
-  font-family: 'Courier New', monospace;
-  color: #2d3748;
-}
-
-.countdown {
-  font-weight: 700;
-  color: #e53e3e;
+  padding: 8px 12px;
+  border-radius: 4px;
+  border: 1px solid #ddd;
+  flex-shrink: 0;
 }
 
 /* Messages Card */
@@ -295,24 +237,6 @@ body {
   white-space: nowrap;
 }
 
-.time-display {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.time-date {
-  font-weight: 500;
-  color: #4a5568;
-  font-size: 0.9em;
-}
-
-.time-time {
-  font-size: 0.8em;
-  color: #718096;
-  font-weight: 400;
-}
-
 /* No Messages State */
 .no-messages {
   padding: 60px 25px;
@@ -364,132 +288,28 @@ body {
 }
 
 /* Numbers Card Styles */
-.numbers-card {
-  background: white;
-  border-radius: 12px;
-  padding: 20px;
-  margin: 20px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-}
-
-.numbers-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
-  padding-bottom: 15px;
-  border-bottom: 2px solid #f0f0f0;
-}
-
-.numbers-header h2 {
-  margin: 0;
-  color: #333;
-  font-size: 1.5em;
-}
-
-.lease-more-btn {
-  background: linear-gradient(135deg, #00b894 0%, #00a085 100%);
-  color: white;
-  border: none;
-  padding: 10px 20px;
-  border-radius: 8px;
-  cursor: pointer;
-  font-size: 14px;
-  font-weight: 600;
-  transition: all 0.3s ease;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.lease-more-btn:hover:not(:disabled) {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 184, 148, 0.3);
-}
-
-.lease-more-btn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
 .numbers-list {
   display: flex;
-  flex-direction: column;
-  gap: 15px;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 20px 25px;
+  justify-content: center;
 }
 
 .number-item {
   background: #f8f9fa;
   border: 1px solid #e9ecef;
   border-radius: 8px;
-  padding: 12px 15px;
+  padding: 10px 15px;
   transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
 .number-item:hover {
   background: #e9ecef;
   border-color: #6c5ce7;
-}
-
-.number-display {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 0;
-  justify-content: flex-start;
-}
-
-.number-display.single-number {
-  justify-content: center;
-}
-
-.number-label {
-  font-weight: 600;
-  color: #666;
-  min-width: 40px;
-}
-
-.number-value {
-  font-family: 'Courier New', monospace;
-  font-size: 1.1em;
-  font-weight: 700;
-  color: #2d3436;
-  background: white;
-  padding: 8px 12px;
-  border-radius: 4px;
-  border: 1px solid #ddd;
-  flex-shrink: 0;
-}
-
-.number-expiry {
-  font-size: 0.9em;
-  color: #666;
-  margin-top: 5px;
-}
-
-.lease-number-btn {
-  background: linear-gradient(135deg, #4c63d2 0%, #6c5ce7 100%);
-  color: white;
-  border: none;
-  padding: 12px 24px;
-  border-radius: 8px;
-  cursor: pointer;
-  font-size: 14px;
-  font-weight: 600;
-  transition: all 0.3s ease;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.lease-number-btn:hover:not(:disabled) {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(108, 92, 231, 0.3);
-}
-
-.lease-number-btn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
 }
 
 /* Copy Button Styles */
@@ -558,26 +378,9 @@ body {
   }
   
   .number-header, .messages-header {
-    flex-direction: column;
-    gap: 15px;
-    align-items: stretch;
-  }
-  
-  .number-display {
     flex-direction: row;
+    gap: 15px;
     align-items: center;
-    gap: 8px;
-    flex-wrap: wrap;
-  }
-  
-  .subscription-detail, .expiry-detail {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 5px;
-  }
-  
-  .detail-label {
-    min-width: auto;
   }
   
   .messages-table-container {
@@ -588,24 +391,14 @@ body {
     min-width: 600px;
   }
   
-  .numbers-header {
-    flex-direction: column;
-    gap: 15px;
-    align-items: stretch;
-  }
-  
   .numbers-header h2 {
-    text-align: center;
+    text-align: left;
+    font-size: 1.2em;
   }
   
-  .number-display {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 5px;
-  }
-  
-  .number-label {
-    min-width: auto;
+  .number-item {
+    flex-grow: 1;
+    justify-content: center;
   }
   
   .messages-table {
