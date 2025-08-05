@@ -28,7 +28,7 @@
   },
   "devDependencies": {
     "babel-jest": "^30.0.1",
-    "concurrently": "^8.2.2",
+    "concurrently": "^9.2.0",
     "identity-obj-proxy": "^3.0.0",
     "jest": "^27.5.1",
     "jest-transform-css": "^6.0.3",
