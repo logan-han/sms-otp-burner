@@ -150,18 +150,19 @@ function App() {
                 <h2>📱 {leasedNumbers.length === 1 ? 'Virtual Number' : `Virtual Numbers (${leasedNumbers.length})`}</h2>
               </div>
               <div className="numbers-list">
-                {leasedNumbers.map((number, index) => (
+                {leasedNumbers.map((number) => (
                   <div key={number.virtualNumber || number.msisdn} className="number-item">
-                    <div className={`number-display ${leasedNumbers.length === 1 ? 'single-number' : ''}`}>
-                      <span className="number-value">{number.virtualNumber || number.msisdn}</span>
-                      <button 
-                        className="copy-btn" 
-                        onClick={() => handleCopyNumber(number.virtualNumber || number.msisdn)} 
-                        title={copiedNumber === (number.virtualNumber || number.msisdn) ? "Copied!" : "Copy number"}
-                      >
-                        {copiedNumber === (number.virtualNumber || number.msisdn) ? '✅' : '📋'}
-                      </button>
-                    </div>
+                    <span className="number-value">{number.virtualNumber || number.msisdn}</span>
+                    <button 
+                      className="copy-btn" 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleCopyNumber(number.virtualNumber || number.msisdn);
+                      }} 
+                      title={copiedNumber === (number.virtualNumber || number.msisdn) ? "Copied!" : "Copy number"}
+                    >
+                      {copiedNumber === (number.virtualNumber || number.msisdn) ? '✅' : '📋'}
+                    </button>
                   </div>
                 ))}
               </div>
