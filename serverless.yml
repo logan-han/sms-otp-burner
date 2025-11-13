@@ -2,7 +2,7 @@ service: sms-otp-burner
 
 provider:
   name: aws
-  runtime: nodejs20.x
+  runtime: nodejs22.x
   region: ap-southeast-4
   environment:
     TELSTRA_CLIENT_ID: ${env:TELSTRA_CLIENT_ID}
