@@ -36,10 +36,13 @@ jobs:
           fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2) + '\n');
           "
 
+      - name: Configure Yarn
+        run: |
+          yarn config set enableImmutableInstalls false
+          yarn config set enableHardenedMode false
+
       - name: Update lockfile
         run: yarn install
-        env:
-          YARN_ENABLE_HARDENED_MODE: 0
 
       - name: Commit and push changes
         run: |
