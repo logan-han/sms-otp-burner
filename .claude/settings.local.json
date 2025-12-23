@@ -1,0 +1,32 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm audit:*)",
+      "Bash(npm view:*)",
+      "Bash(yarn npm info:*)",
+      "WebSearch",
+      "Bash(cat:*)",
+      "Bash(yarn install)",
+      "Bash(corepack enable:*)",
+      "Bash(corepack yarn install:*)",
+      "Bash(cmd.exe /c \"cd /d C:\\\\Users\\\\logan\\\\Downloads\\\\sms-otp-burner && yarn install\")",
+      "Bash(cmd.exe /c \"cd /d C:\\\\Users\\\\logan\\\\Downloads\\\\sms-otp-burner && yarn install 2>&1\")",
+      "Bash(powershell.exe -Command \"Set-Location ''C:\\\\Users\\\\logan\\\\Downloads\\\\sms-otp-burner''; yarn install 2>&1\")",
+      "Bash(powershell.exe:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(gh run list:*)",
+      "Bash(gh run view:*)",
+      "Bash(gh pr list:*)",
+      "Bash(git revert:*)",
+      "Bash(gh pr view:*)",
+      "Bash(gh pr checks:*)",
+      "Bash(gh pr comment:*)",
+      "Bash(gh run:*)",
+      "Bash(gh api:*)",
+      "Bash(gh workflow run:*)",
+      "Bash(git pull:*)"
+    ]
+  }
+}
