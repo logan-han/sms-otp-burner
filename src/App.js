@@ -8,6 +8,7 @@ function App() {
   const [leasedNumbers, setLeasedNumbers] = useState([]);
   const [messages, setMessages] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [error, setError] = useState(null);
   const [hasCheckedNumbers, setHasCheckedNumbers] = useState(false);
 
@@ -63,7 +64,7 @@ function App() {
       const response = await fetch(`${API_BASE_URL}/messages`);
       if (response && response.ok) {
         const data = await response.json();
-        const sortedMessages = (data.messages || []).sort((a, b) => 
+        const sortedMessages = (data.messages || []).sort((a, b) =>
           new Date(b.receivedAt) - new Date(a.receivedAt)
         );
         setMessages(sortedMessages);
@@ -78,6 +79,12 @@ function App() {
       handleError('Error fetching messages', err);
     }
   }, []);
+
+  const handleRefresh = useCallback(async () => {
+    setIsRefreshing(true);
+    await fetchMessages();
+    setIsRefreshing(false);
+  }, [fetchMessages]);
 
   const handleLeaseNumber = useCallback(async () => {
     setIsLoading(true);
@@ -184,13 +191,13 @@ function App() {
           <div className="messages-card">
             <div className="messages-header">
               <h2>📨 Received Messages</h2>
-              <button 
-                className="refresh-btn" 
-                onClick={() => fetchMessages()} 
-                disabled={isLoading || leasedNumbers.length === 0}
+              <button
+                className={`refresh-btn ${isRefreshing ? 'refreshing' : ''}`}
+                onClick={handleRefresh}
+                disabled={isLoading || isRefreshing || leasedNumbers.length === 0}
                 title="Refresh messages"
               >
-                🔄 Refresh
+                <span className={isRefreshing ? 'spin' : ''}>🔄</span> {isRefreshing ? 'Refreshing...' : 'Refresh'}
               </button>
             </div>
             

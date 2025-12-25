@@ -1,5 +1,6 @@
 # Dependencies
 node_modules/
+yarn.lock
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
@@ -152,6 +153,8 @@ credentials.json
 # Test artifacts
 test-results/
 coverage/
+playwright-report/
+playwright/.cache/
 
 # Lambda deployment packages
 *.zip
