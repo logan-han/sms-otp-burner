@@ -175,6 +175,24 @@ body {
   box-shadow: none;
 }
 
+.refresh-btn.refreshing {
+  background: linear-gradient(135deg, #63b3ed 0%, #4299e1 100%);
+}
+
+.refresh-btn .spin {
+  display: inline-block;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 /* Messages Table */
 .messages-table-container {
   max-height: 400px;

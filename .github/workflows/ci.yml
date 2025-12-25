@@ -1,0 +1,141 @@
+name: CI/CD
+
+on:
+  push:
+    branches: ['*']
+  pull_request:
+    branches: ['*']
+
+permissions:
+  contents: read
+
+jobs:
+  unit-tests:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Enable Corepack
+        run: corepack enable
+
+      - name: Install dependencies
+        run: yarn install
+        env:
+          YARN_ENABLE_HARDENED_MODE: 0
+
+      - name: Lint code
+        run: yarn lint
+
+      - name: Run frontend tests
+        run: yarn test:frontend --ci --coverage --watchAll=false
+
+      - name: Run backend tests
+        run: yarn test:backend --ci --coverage
+        env:
+          TELSTRA_CLIENT_ID: test_client_id
+          TELSTRA_CLIENT_SECRET: test_client_secret
+
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@v5
+        if: success()
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          fail_ci_if_error: false
+
+  ui-tests:
+    name: UI Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Enable Corepack
+        run: corepack enable
+
+      - name: Install dependencies
+        run: yarn install
+        env:
+          YARN_ENABLE_HARDENED_MODE: 0
+
+      - name: Install Playwright browsers
+        run: yarn playwright install --with-deps chromium firefox webkit
+
+      - name: Build React app
+        run: yarn build:react
+
+      - name: Run UI tests
+        run: yarn test:ui
+        env:
+          TELSTRA_CLIENT_ID: test_client_id
+          TELSTRA_CLIENT_SECRET: test_client_secret
+          CI: true
+
+      - name: Upload Playwright report
+        uses: actions/upload-artifact@v4
+        if: ${{ !cancelled() }}
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 30
+
+      - name: Upload test screenshots on failure
+        uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: test-screenshots
+          path: test-results/
+          retention-days: 7
+
+  deploy:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    needs: [unit-tests, ui-tests]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    environment: production
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Enable Corepack
+        run: corepack enable
+
+      - name: Install dependencies
+        run: yarn install
+        env:
+          YARN_ENABLE_HARDENED_MODE: 0
+
+      - name: Build React app
+        run: yarn build:react
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ap-southeast-4
+
+      - name: Deploy with Serverless
+        env:
+          SERVERLESS_ACCESS_KEY: ${{ secrets.SERVERLESS_ACCESS_KEY }}
+          TELSTRA_CLIENT_ID: ${{ secrets.TELSTRA_CLIENT_ID }}
+          TELSTRA_CLIENT_SECRET: ${{ secrets.TELSTRA_CLIENT_SECRET }}
+          MAX_LEASED_NUMBER_COUNT: ${{ vars.MAX_LEASED_NUMBER_COUNT || '1' }}
+        run: yarn serverless deploy --stage prod

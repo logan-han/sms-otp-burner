@@ -26,7 +26,16 @@
       "Bash(gh run:*)",
       "Bash(gh api:*)",
       "Bash(gh workflow run:*)",
-      "Bash(git pull:*)"
+      "Bash(git pull:*)",
+      "Bash(yarn add:*)",
+      "Bash(git -C \"C:\\\\Users\\\\logan\\\\Downloads\\\\sms-otp-burner\" add -A)",
+      "Bash(git -C \"C:\\\\Users\\\\logan\\\\Downloads\\\\sms-otp-burner\" status)",
+      "Bash(git -C \"C:\\\\Users\\\\logan\\\\Downloads\\\\sms-otp-burner\" diff --cached)",
+      "Bash(git -C \"C:\\\\Users\\\\logan\\\\Downloads\\\\sms-otp-burner\" log -1 --format=\"%B\")",
+      "Bash(git -C \"C:\\\\Users\\\\logan\\\\Downloads\\\\sms-otp-burner\" log --oneline -5)",
+      "Bash(git -C \"C:\\\\Users\\\\logan\\\\Downloads\\\\sms-otp-burner\" commit --amend --no-edit)",
+      "Bash(git -C \"C:\\\\Users\\\\logan\\\\Downloads\\\\sms-otp-burner\" push --force-with-lease)",
+      "Bash(git -C \"C:\\\\Users\\\\logan\\\\Downloads\\\\sms-otp-burner\" show 3827250:serverless.yml)"
     ]
   }
 }

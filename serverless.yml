@@ -8,6 +8,8 @@ provider:
     TELSTRA_CLIENT_ID: ${env:TELSTRA_CLIENT_ID}
     TELSTRA_CLIENT_SECRET: ${env:TELSTRA_CLIENT_SECRET}
     MAX_LEASED_NUMBER_COUNT: ${env:MAX_LEASED_NUMBER_COUNT, '1'}
+    ALLOWED_ORIGINS: ${env:ALLOWED_ORIGINS, ""}
+    DEBUG: ${env:DEBUG, 'false'}
 
 functions:
   api:
@@ -49,7 +51,6 @@ package:
   patterns:
     - 'src/handler.js'
     - 'build/**'
-    - 'node_modules/axios/**'
     - 'node_modules/mime-types/**'
     - 'node_modules/mime-db/**'
     - 'package.json'
@@ -57,6 +58,9 @@ package:
     - '!.nyc_output/**'
     - '!test/**'
     - '!tests/**'
+    - '!e2e/**'
+    - '!playwright-report/**'
+    - '!playwright.config.js'
     - '!public/**'
     - '!.git/**'
     - '!.env'
