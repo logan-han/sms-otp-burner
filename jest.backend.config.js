@@ -9,9 +9,5 @@ module.exports = {
   ],
   collectCoverageFrom: [
     "src/handler.js"
-  ],
-  moduleNameMapper: {
-    "^axios$": "<rootDir>/src/__tests__/__mocks__/axios.js",
-    "^@telstra/messaging$": "<rootDir>/src/__tests__/__mocks__/@telstra/messaging.js"
-  }
+  ]
 };

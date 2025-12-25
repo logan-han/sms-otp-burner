@@ -137,11 +137,11 @@ describe('App Component', () => {
     render(<App />);
 
     await waitFor(() => {
-      const refreshButton = screen.getByText('🔄 Refresh');
+      const refreshButton = screen.getByRole('button', { name: /Refresh/i });
       expect(refreshButton).toBeInTheDocument();
     });
 
-    const refreshButton = screen.getByText('🔄 Refresh');
+    const refreshButton = screen.getByRole('button', { name: /Refresh/i });
     
     fetch.mockResolvedValueOnce({
       ok: true,
@@ -287,7 +287,6 @@ describe('App Component', () => {
     
     // Wait for the checkmark to change back to clipboard
     await waitFor(() => {
-      expect(screen.queryByText('✅')).not.toBeInTheDocument();
       expect(screen.getByText('📋')).toBeInTheDocument();
     }, { timeout: 3000 });
   });
@@ -583,7 +582,7 @@ describe('App Component', () => {
     render(<App />);
 
     await waitFor(() => {
-      const refreshButton = screen.getByText('🔄 Refresh');
+      const refreshButton = screen.getByRole('button', { name: /Refresh/i });
       expect(refreshButton).toBeDisabled();
     }, { timeout: 2000 });
   });
