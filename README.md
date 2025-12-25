@@ -1,5 +1,4 @@
-![Test](https://github.com/logan-han/sms-otp-burner/actions/workflows/test.yml/badge.svg?branch=main)
-![Deploy](https://github.com/logan-han/sms-otp-burner/actions/workflows/deploy.yml/badge.svg?branch=main)
+![CI/CD](https://github.com/logan-han/sms-otp-burner/actions/workflows/ci.yml/badge.svg?branch=main)
 [![codecov](https://codecov.io/gh/logan-han/sms-otp-burner/graph/badge.svg?token=vvedmYETBR)](https://codecov.io/gh/logan-han/sms-otp-burner)
 # Australian SMS OTP Burner
 
