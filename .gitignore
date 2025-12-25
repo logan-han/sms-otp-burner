@@ -152,6 +152,8 @@ credentials.json
 # Test artifacts
 test-results/
 coverage/
+playwright-report/
+playwright/.cache/
 
 # Lambda deployment packages
 *.zip

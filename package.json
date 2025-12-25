@@ -10,6 +10,9 @@
     "build:react": "react-scripts build",
     "test:frontend": "react-scripts test --testPathIgnorePatterns=src/__tests__/backend --testPathIgnorePatterns=src/__tests__/__mocks__",
     "test:backend": "jest --config=jest.backend.config.js",
+    "test:ui": "playwright test",
+    "test:ui:headed": "playwright test --headed",
+    "test:ui:debug": "playwright test --debug",
     "test": "yarn test:frontend --watchAll=false && yarn test:backend",
     "start": "concurrently \"yarn start:backend\" \"yarn start:react\"",
     "deploy": "yarn build:react && serverless deploy",
@@ -28,6 +31,7 @@
     "web-vitals": "^5.1.0"
   },
   "devDependencies": {
+    "@playwright/test": "^1.49.1",
     "babel-jest": "^30.2.0",
     "concurrently": "^9.2.1",
     "identity-obj-proxy": "^3.0.0",

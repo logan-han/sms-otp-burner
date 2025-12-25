@@ -26,7 +26,8 @@
       "Bash(gh run:*)",
       "Bash(gh api:*)",
       "Bash(gh workflow run:*)",
-      "Bash(git pull:*)"
+      "Bash(git pull:*)",
+      "Bash(yarn add:*)"
     ]
   }
 }
