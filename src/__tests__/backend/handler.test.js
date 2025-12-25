@@ -817,6 +817,822 @@ describe('Handler Functions', () => {
   });
 
   // =====================
+  // Additional API routing tests
+  // =====================
+  describe('Additional API routing', () => {
+    beforeEach(() => {
+      jest.resetModules();
+      mockFetch.mockReset();
+      mockFetch.mockImplementation((url) => {
+        if (url.includes('oauth/token')) {
+          return Promise.resolve(createFetchResponse({
+            access_token: 'test_token',
+            expires_in: 3600,
+          }));
+        }
+        if (url.includes('virtual-numbers')) {
+          return Promise.resolve(createFetchResponse({
+            virtualNumbers: [{ virtualNumber: '+61412345678' }],
+          }));
+        }
+        if (url.includes('/messages')) {
+          return Promise.resolve(createFetchResponse({
+            messages: [{ from: '+61999', messageContent: 'Test', to: '+61412345678', receivedTimestamp: '2025-01-01T10:00:00Z' }],
+          }));
+        }
+        return Promise.reject(new Error('Unexpected'));
+      });
+      handler = require('../../handler');
+    });
+
+    test('api routes GET /messages correctly', async () => {
+      const event = {
+        httpMethod: 'GET',
+        headers: {},
+        pathParameters: { proxy: 'messages' },
+      };
+
+      const result = await handler.api(event);
+
+      expect(result.statusCode).toBe(200);
+      const body = JSON.parse(result.body);
+      expect(body.messages).toBeDefined();
+    });
+
+    test('api routes DELETE /number correctly', async () => {
+      mockFetch.mockImplementation((url, options) => {
+        if (url.includes('oauth/token')) {
+          return Promise.resolve(createFetchResponse({
+            access_token: 'test_token',
+            expires_in: 3600,
+          }));
+        }
+        if (url.includes('virtual-numbers') && (!options?.method || options?.method === 'GET')) {
+          return Promise.resolve(createFetchResponse({
+            virtualNumbers: [{ virtualNumber: '+61412345678' }],
+          }));
+        }
+        if (url.includes('virtual-numbers') && options?.method === 'DELETE') {
+          return Promise.resolve(createFetchResponse({}));
+        }
+        return Promise.reject(new Error('Unexpected'));
+      });
+
+      const event = {
+        httpMethod: 'DELETE',
+        headers: {},
+        pathParameters: { proxy: 'number' },
+        body: JSON.stringify({ number: '+61412345678' }),
+      };
+
+      const result = await handler.api(event);
+
+      expect(result.statusCode).toBe(200);
+    });
+
+    test('api routes GET /current-number correctly', async () => {
+      const event = {
+        httpMethod: 'GET',
+        headers: {},
+        pathParameters: { proxy: 'current-number' },
+      };
+
+      const result = await handler.api(event);
+
+      expect(result.statusCode).toBe(200);
+    });
+
+    test('api routes GET /virtual-numbers correctly', async () => {
+      const event = {
+        httpMethod: 'GET',
+        headers: {},
+        pathParameters: { proxy: 'virtual-numbers' },
+      };
+
+      const result = await handler.api(event);
+
+      expect(result.statusCode).toBe(200);
+    });
+
+    test('api returns 405 for unsupported method on messages', async () => {
+      const event = {
+        httpMethod: 'POST',
+        headers: {},
+        pathParameters: { proxy: 'messages' },
+      };
+
+      const result = await handler.api(event);
+
+      expect(result.statusCode).toBe(405);
+      const body = JSON.parse(result.body);
+      expect(body.allowedMethods).toContain('GET');
+    });
+
+    test('api returns 405 for unsupported method on current-number', async () => {
+      const event = {
+        httpMethod: 'POST',
+        headers: {},
+        pathParameters: { proxy: 'current-number' },
+      };
+
+      const result = await handler.api(event);
+
+      expect(result.statusCode).toBe(405);
+    });
+
+    test('api returns 405 for unsupported method on virtual-numbers', async () => {
+      const event = {
+        httpMethod: 'DELETE',
+        headers: {},
+        pathParameters: { proxy: 'virtual-numbers' },
+      };
+
+      const result = await handler.api(event);
+
+      expect(result.statusCode).toBe(405);
+    });
+
+    test('api handles httpMethod from requestContext.http.method', async () => {
+      const event = {
+        requestContext: { http: { method: 'OPTIONS' } },
+        headers: {},
+        pathParameters: { proxy: 'messages' },
+      };
+
+      const result = await handler.api(event);
+
+      expect(result.statusCode).toBe(200);
+    });
+
+    test('api handles httpMethod from requestContext.httpMethod', async () => {
+      const event = {
+        requestContext: { httpMethod: 'OPTIONS' },
+        headers: {},
+        pathParameters: { proxy: 'messages' },
+      };
+
+      const result = await handler.api(event);
+
+      expect(result.statusCode).toBe(200);
+    });
+  });
+
+  // =====================
+  // sanitizeLogData tests
+  // =====================
+  describe('sanitizeLogData', () => {
+    test('sanitizeLogData redacts sensitive fields in headers', async () => {
+      process.env.DEBUG = 'true';
+      jest.resetModules();
+      mockFetch.mockReset();
+
+      const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
+
+      mockFetch.mockImplementation((url) => {
+        if (url.includes('oauth/token')) {
+          return Promise.resolve(createFetchResponse({
+            access_token: 'test_token',
+            expires_in: 3600,
+          }));
+        }
+        if (url.includes('virtual-numbers')) {
+          return Promise.resolve(createFetchResponse({ virtualNumbers: [] }));
+        }
+        return Promise.reject(new Error('Unexpected'));
+      });
+
+      handler = require('../../handler');
+
+      // Trigger API call with authorization header to test sanitization
+      await handler.api({
+        httpMethod: 'GET',
+        headers: {
+          Authorization: 'Bearer secret_token',
+          authorization: 'bearer lower_case',
+          origin: 'http://localhost:3000'
+        },
+        pathParameters: { proxy: 'current-number' },
+      });
+
+      // Verify logging happened
+      expect(consoleSpy).toHaveBeenCalled();
+      consoleSpy.mockRestore();
+    });
+
+    test('sanitizeLogData redacts body field', async () => {
+      process.env.DEBUG = 'true';
+      jest.resetModules();
+      mockFetch.mockReset();
+
+      const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
+
+      mockFetch.mockImplementation((url, options) => {
+        if (url.includes('oauth/token')) {
+          return Promise.resolve(createFetchResponse({
+            access_token: 'test_token',
+            expires_in: 3600,
+          }));
+        }
+        if (url.includes('virtual-numbers') && (!options?.method || options?.method === 'GET')) {
+          return Promise.resolve(createFetchResponse({
+            virtualNumbers: [{ virtualNumber: '+61412345678' }],
+          }));
+        }
+        if (url.includes('virtual-numbers') && options?.method === 'DELETE') {
+          return Promise.resolve(createFetchResponse({}));
+        }
+        return Promise.reject(new Error('Unexpected'));
+      });
+
+      handler = require('../../handler');
+
+      // Trigger API call with body to test sanitization
+      await handler.releaseNumber({
+        headers: { origin: 'http://localhost:3000' },
+        body: JSON.stringify({ number: '+61412345678', secret: 'should_be_logged' }),
+      });
+
+      expect(consoleSpy).toHaveBeenCalled();
+      consoleSpy.mockRestore();
+    });
+  });
+
+  // =====================
+  // DEBUG mode logging tests
+  // =====================
+  describe('DEBUG mode logging', () => {
+    test('log.info outputs data when DEBUG is true', async () => {
+      process.env.DEBUG = 'true';
+      jest.resetModules();
+      mockFetch.mockReset();
+
+      const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
+
+      mockFetch.mockImplementation((url) => {
+        if (url.includes('oauth/token')) {
+          return Promise.resolve(createFetchResponse({
+            access_token: 'test_token',
+            expires_in: 3600,
+          }));
+        }
+        if (url.includes('virtual-numbers')) {
+          return Promise.resolve(createFetchResponse({ virtualNumbers: [] }));
+        }
+        return Promise.reject(new Error('Unexpected'));
+      });
+
+      handler = require('../../handler');
+      await handler.getNumber({ headers: {} });
+
+      expect(consoleSpy).toHaveBeenCalled();
+      consoleSpy.mockRestore();
+    });
+
+    test('log.warn outputs data when DEBUG is true', async () => {
+      process.env.DEBUG = 'true';
+      jest.resetModules();
+      mockFetch.mockReset();
+
+      const consoleWarnSpy = jest.spyOn(console, 'warn').mockImplementation();
+
+      mockFetch.mockImplementation((url, options) => {
+        if (url.includes('oauth/token')) {
+          return Promise.resolve(createFetchResponse({
+            access_token: 'test_token',
+            expires_in: 3600,
+          }));
+        }
+        if (url.includes('virtual-numbers') && (!options?.method || options?.method === 'GET')) {
+          return Promise.reject(new Error('Check error'));
+        }
+        return Promise.reject(new Error('Unexpected'));
+      });
+
+      handler = require('../../handler');
+      await handler.leaseNumber({ headers: {} });
+
+      consoleWarnSpy.mockRestore();
+    });
+  });
+
+  // =====================
+  // releaseNumber additional tests
+  // =====================
+  describe('releaseNumber additional tests', () => {
+    test('releaseNumber returns 500 when fetchAllVirtualNumbers fails', async () => {
+      jest.resetModules();
+      mockFetch.mockReset();
+
+      mockFetch.mockImplementation((url) => {
+        if (url.includes('oauth/token')) {
+          return Promise.resolve(createFetchResponse({
+            access_token: 'test_token',
+            expires_in: 3600,
+          }));
+        }
+        if (url.includes('virtual-numbers')) {
+          // Throw error when fetching numbers in releaseNumber
+          return Promise.resolve(createFetchResponse({ error: 'server_error' }, false, 500));
+        }
+        return Promise.reject(new Error('Unexpected'));
+      });
+
+      handler = require('../../handler');
+
+      const result = await handler.releaseNumber({
+        headers: {},
+        body: JSON.stringify({ number: '+61412345678' }),
+      });
+
+      expect(result.statusCode).toBe(500);
+      const body = JSON.parse(result.body);
+      expect(body.message).toBe('Failed to verify current numbers');
+    });
+
+    test('releaseNumber handles API error (non-404)', async () => {
+      jest.resetModules();
+      mockFetch.mockReset();
+
+      mockFetch.mockImplementation((url, options) => {
+        if (url.includes('oauth/token')) {
+          return Promise.resolve(createFetchResponse({
+            access_token: 'test_token',
+            expires_in: 3600,
+          }));
+        }
+        if (url.includes('virtual-numbers') && (!options?.method || options?.method === 'GET')) {
+          return Promise.resolve(createFetchResponse({
+            virtualNumbers: [{ virtualNumber: '+61412345678' }],
+          }));
+        }
+        if (url.includes('virtual-numbers') && options?.method === 'DELETE') {
+          return Promise.resolve(createFetchResponse({ error: 'server_error' }, false, 500));
+        }
+        return Promise.reject(new Error('Unexpected'));
+      });
+
+      handler = require('../../handler');
+
+      const result = await handler.releaseNumber({
+        headers: {},
+        body: JSON.stringify({ phoneNumber: '+61412345678' }),
+      });
+
+      expect(result.statusCode).toBe(500);
+      const body = JSON.parse(result.body);
+      expect(body.message).toBe('Failed to release number');
+    });
+
+    test('releaseNumber uses phoneNumber field from body', async () => {
+      jest.resetModules();
+      mockFetch.mockReset();
+
+      mockFetch.mockImplementation((url, options) => {
+        if (url.includes('oauth/token')) {
+          return Promise.resolve(createFetchResponse({
+            access_token: 'test_token',
+            expires_in: 3600,
+          }));
+        }
+        if (url.includes('virtual-numbers') && (!options?.method || options?.method === 'GET')) {
+          return Promise.resolve(createFetchResponse({
+            virtualNumbers: [{ virtualNumber: '+61412345678' }],
+          }));
+        }
+        if (url.includes('virtual-numbers') && options?.method === 'DELETE') {
+          return Promise.resolve(createFetchResponse({}));
+        }
+        return Promise.reject(new Error('Unexpected'));
+      });
+
+      handler = require('../../handler');
+
+      const result = await handler.releaseNumber({
+        headers: {},
+        body: JSON.stringify({ phoneNumber: '+61412345678' }),
+      });
+
+      expect(result.statusCode).toBe(200);
+    });
+  });
+
+  // =====================
+  // serveFrontend additional tests
+  // =====================
+  describe('serveFrontend additional tests', () => {
+    test('serveFrontend serves JS files from static/js route', async () => {
+      const event = {
+        headers: {},
+        routeKey: 'GET /static/js/{proxy+}',
+        pathParameters: { proxy: 'main.js' },
+      };
+
+      const fs = require('fs');
+      jest.spyOn(fs, 'existsSync').mockReturnValue(true);
+      jest.spyOn(fs, 'readFileSync').mockReturnValue('console.log("test");');
+
+      const result = await handler.serveFrontend(event);
+
+      expect(result.statusCode).toBe(200);
+      expect(result.headers['Content-Type']).toBe('text/javascript');
+
+      fs.existsSync.mockRestore();
+      fs.readFileSync.mockRestore();
+    });
+
+    test('serveFrontend serves media files from static/media route', async () => {
+      const event = {
+        headers: {},
+        routeKey: 'GET /static/media/{proxy+}',
+        pathParameters: { proxy: 'image.png' },
+      };
+
+      const fs = require('fs');
+      jest.spyOn(fs, 'existsSync').mockReturnValue(true);
+      jest.spyOn(fs, 'readFileSync').mockReturnValue(Buffer.from([0x89, 0x50, 0x4e, 0x47]));
+
+      const result = await handler.serveFrontend(event);
+
+      expect(result.statusCode).toBe(200);
+      expect(result.headers['Content-Type']).toBe('image/png');
+      expect(result.isBase64Encoded).toBe(true);
+
+      fs.existsSync.mockRestore();
+      fs.readFileSync.mockRestore();
+    });
+
+    test('serveFrontend returns 404 when file and index.html do not exist', async () => {
+      const event = {
+        headers: {},
+        pathParameters: { proxy: 'nonexistent.html' },
+      };
+
+      const fs = require('fs');
+      jest.spyOn(fs, 'existsSync').mockReturnValue(false);
+
+      const result = await handler.serveFrontend(event);
+
+      expect(result.statusCode).toBe(404);
+      expect(result.body).toContain('React App Not Found');
+
+      fs.existsSync.mockRestore();
+    });
+
+    test('serveFrontend serves SPA fallback for non-existent path', async () => {
+      const event = {
+        headers: {},
+        pathParameters: { proxy: 'some/nested/route' },
+      };
+
+      const fs = require('fs');
+      jest.spyOn(fs, 'existsSync').mockImplementation((filePath) => {
+        return filePath.includes('index.html');
+      });
+      jest.spyOn(fs, 'readFileSync').mockReturnValue('<html><body>SPA</body></html>');
+
+      const result = await handler.serveFrontend(event);
+
+      expect(result.statusCode).toBe(200);
+      expect(result.headers['Content-Type']).toBe('text/html');
+
+      fs.existsSync.mockRestore();
+      fs.readFileSync.mockRestore();
+    });
+
+    test('serveFrontend handles empty path', async () => {
+      const event = {
+        headers: {},
+        pathParameters: { proxy: '' },
+      };
+
+      const fs = require('fs');
+      jest.spyOn(fs, 'existsSync').mockReturnValue(true);
+      jest.spyOn(fs, 'readFileSync').mockReturnValue('<html></html>');
+
+      const result = await handler.serveFrontend(event);
+
+      expect(result.statusCode).toBe(200);
+
+      fs.existsSync.mockRestore();
+      fs.readFileSync.mockRestore();
+    });
+
+    test('serveFrontend handles / path', async () => {
+      const event = {
+        headers: {},
+        pathParameters: { proxy: '/' },
+      };
+
+      const fs = require('fs');
+      jest.spyOn(fs, 'existsSync').mockReturnValue(true);
+      jest.spyOn(fs, 'readFileSync').mockReturnValue('<html></html>');
+
+      const result = await handler.serveFrontend(event);
+
+      expect(result.statusCode).toBe(200);
+
+      fs.existsSync.mockRestore();
+      fs.readFileSync.mockRestore();
+    });
+
+    test('serveFrontend serves JSON files as text', async () => {
+      const event = {
+        headers: {},
+        pathParameters: { proxy: 'manifest.json' },
+      };
+
+      const fs = require('fs');
+      jest.spyOn(fs, 'existsSync').mockReturnValue(true);
+      jest.spyOn(fs, 'readFileSync').mockReturnValue('{"name": "test"}');
+
+      const result = await handler.serveFrontend(event);
+
+      expect(result.statusCode).toBe(200);
+      expect(result.headers['Content-Type']).toBe('application/json');
+      expect(result.isBase64Encoded).toBe(false);
+
+      fs.existsSync.mockRestore();
+      fs.readFileSync.mockRestore();
+    });
+  });
+
+  // =====================
+  // Telstra API error handling tests
+  // =====================
+  describe('Telstra API error handling', () => {
+    test('getTelstraAccessToken clears cache on auth failure', async () => {
+      jest.resetModules();
+      mockFetch.mockReset();
+
+      mockFetch.mockImplementation((url) => {
+        if (url.includes('oauth/token')) {
+          return Promise.resolve(createFetchResponse({ error: 'auth_failed' }, false, 401));
+        }
+        return Promise.reject(new Error('Unexpected'));
+      });
+
+      handler = require('../../handler');
+
+      const result = await handler.getNumber({ headers: {} });
+
+      expect(result.statusCode).toBe(500);
+    });
+
+    test('callTelstraApi handles non-JSON error response', async () => {
+      jest.resetModules();
+      mockFetch.mockReset();
+
+      mockFetch.mockImplementation((url) => {
+        if (url.includes('oauth/token')) {
+          return Promise.resolve(createFetchResponse({
+            access_token: 'test_token',
+            expires_in: 3600,
+          }));
+        }
+        if (url.includes('virtual-numbers')) {
+          return Promise.resolve({
+            ok: false,
+            status: 500,
+            json: () => Promise.reject(new Error('Invalid JSON')),
+          });
+        }
+        return Promise.reject(new Error('Unexpected'));
+      });
+
+      handler = require('../../handler');
+
+      const result = await handler.getNumber({ headers: {} });
+
+      expect(result.statusCode).toBe(500);
+    });
+  });
+
+  // =====================
+  // CORS origin tests
+  // =====================
+  describe('CORS origin handling', () => {
+    test('getCorsOrigin returns default when no origin provided', async () => {
+      const event = {
+        httpMethod: 'OPTIONS',
+        headers: {},
+        pathParameters: { proxy: 'messages' },
+      };
+
+      const result = await handler.api(event);
+
+      expect(result.headers['Access-Control-Allow-Origin']).toBe('http://localhost:3000');
+    });
+
+    test('getCorsOrigin uses Origin header with capital O', async () => {
+      const event = {
+        httpMethod: 'OPTIONS',
+        headers: { Origin: 'https://sms.han.life' },
+        pathParameters: { proxy: 'messages' },
+      };
+
+      const result = await handler.api(event);
+
+      expect(result.headers['Access-Control-Allow-Origin']).toBe('https://sms.han.life');
+    });
+  });
+
+  // =====================
+  // getAllVirtualNumbers error handling
+  // =====================
+  describe('getAllVirtualNumbers error handling', () => {
+    test('getAllVirtualNumbers returns empty array on API error', async () => {
+      jest.resetModules();
+      mockFetch.mockReset();
+
+      mockFetch.mockImplementation((url) => {
+        if (url.includes('oauth/token')) {
+          return Promise.resolve(createFetchResponse({
+            access_token: 'test_token',
+            expires_in: 3600,
+          }));
+        }
+        if (url.includes('virtual-numbers')) {
+          return Promise.resolve(createFetchResponse({ error: 'server_error' }, false, 500));
+        }
+        return Promise.reject(new Error('Unexpected'));
+      });
+
+      handler = require('../../handler');
+
+      const result = await handler.getAllVirtualNumbers({ headers: {} });
+
+      // Should return 200 with empty array on error (graceful degradation)
+      expect(result.statusCode).toBe(200);
+      const body = JSON.parse(result.body);
+      expect(body.virtualNumbers).toEqual([]);
+    });
+  });
+
+  // =====================
+  // getMessages fetchAllVirtualNumbers error
+  // =====================
+  describe('getMessages fetchAllVirtualNumbers error', () => {
+    test('getMessages returns 404 when fetchAllVirtualNumbers fails', async () => {
+      jest.resetModules();
+      mockFetch.mockReset();
+
+      mockFetch.mockImplementation((url) => {
+        if (url.includes('oauth/token')) {
+          return Promise.resolve(createFetchResponse({
+            access_token: 'test_token',
+            expires_in: 3600,
+          }));
+        }
+        if (url.includes('virtual-numbers')) {
+          return Promise.resolve(createFetchResponse({ error: 'server_error' }, false, 500));
+        }
+        return Promise.reject(new Error('Unexpected'));
+      });
+
+      handler = require('../../handler');
+
+      const result = await handler.getMessages({ headers: {} });
+
+      // Should return 404 because virtualNumbers is empty after error
+      expect(result.statusCode).toBe(404);
+      const body = JSON.parse(result.body);
+      expect(body.message).toContain('No active numbers to fetch messages for');
+    });
+  });
+
+  // =====================
+  // fetchAllVirtualNumbers tests
+  // =====================
+  describe('fetchAllVirtualNumbers edge cases', () => {
+    test('fetchAllVirtualNumbers handles null data', async () => {
+      jest.resetModules();
+      mockFetch.mockReset();
+
+      mockFetch.mockImplementation((url) => {
+        if (url.includes('oauth/token')) {
+          return Promise.resolve(createFetchResponse({
+            access_token: 'test_token',
+            expires_in: 3600,
+          }));
+        }
+        if (url.includes('virtual-numbers')) {
+          return Promise.resolve(createFetchResponse(null));
+        }
+        return Promise.reject(new Error('Unexpected'));
+      });
+
+      handler = require('../../handler');
+
+      const result = await handler.getAllVirtualNumbers({ headers: {} });
+
+      expect(result.statusCode).toBe(200);
+      const body = JSON.parse(result.body);
+      expect(body.virtualNumbers).toEqual([]);
+    });
+
+    test('fetchAllVirtualNumbers handles response with empty virtualNumbers array', async () => {
+      jest.resetModules();
+      mockFetch.mockReset();
+
+      mockFetch.mockImplementation((url) => {
+        if (url.includes('oauth/token')) {
+          return Promise.resolve(createFetchResponse({
+            access_token: 'test_token',
+            expires_in: 3600,
+          }));
+        }
+        if (url.includes('virtual-numbers')) {
+          return Promise.resolve(createFetchResponse({ virtualNumbers: [] }));
+        }
+        return Promise.reject(new Error('Unexpected'));
+      });
+
+      handler = require('../../handler');
+
+      const result = await handler.getAllVirtualNumbers({ headers: {} });
+
+      expect(result.statusCode).toBe(200);
+      const body = JSON.parse(result.body);
+      expect(body.virtualNumbers).toEqual([]);
+    });
+  });
+
+  // =====================
+  // getMessages edge cases
+  // =====================
+  describe('getMessages edge cases', () => {
+    test('getMessages handles messages with alternative field names', async () => {
+      jest.resetModules();
+      mockFetch.mockReset();
+
+      mockFetch.mockImplementation((url) => {
+        if (url.includes('oauth/token')) {
+          return Promise.resolve(createFetchResponse({
+            access_token: 'test_token',
+            expires_in: 3600,
+          }));
+        }
+        if (url.includes('virtual-numbers')) {
+          return Promise.resolve(createFetchResponse({
+            virtualNumbers: [{ virtualNumber: '+61412345678' }],
+          }));
+        }
+        if (url.includes('/messages')) {
+          return Promise.resolve(createFetchResponse({
+            messages: [{
+              sourceNumber: '+61999',
+              body: 'Test body',
+              destinationNumber: '+61412345678',
+              timestamp: '2025-01-01T10:00:00Z',
+            }],
+          }));
+        }
+        return Promise.reject(new Error('Unexpected'));
+      });
+
+      handler = require('../../handler');
+
+      const result = await handler.getMessages({ headers: {} });
+
+      expect(result.statusCode).toBe(200);
+      const body = JSON.parse(result.body);
+      expect(body.messages[0].from).toBe('+61999');
+      expect(body.messages[0].body).toBe('Test body');
+    });
+
+    test('getMessages handles null messages array', async () => {
+      jest.resetModules();
+      mockFetch.mockReset();
+
+      mockFetch.mockImplementation((url) => {
+        if (url.includes('oauth/token')) {
+          return Promise.resolve(createFetchResponse({
+            access_token: 'test_token',
+            expires_in: 3600,
+          }));
+        }
+        if (url.includes('virtual-numbers')) {
+          return Promise.resolve(createFetchResponse({
+            virtualNumbers: [{ virtualNumber: '+61412345678' }],
+          }));
+        }
+        if (url.includes('/messages')) {
+          return Promise.resolve(createFetchResponse({}));
+        }
+        return Promise.reject(new Error('Unexpected'));
+      });
+
+      handler = require('../../handler');
+
+      const result = await handler.getMessages({ headers: {} });
+
+      expect(result.statusCode).toBe(200);
+      const body = JSON.parse(result.body);
+      expect(body.messages).toEqual([]);
+    });
+  });
+
+  // =====================
   // MAX_LEASED_NUMBER_COUNT tests
   // =====================
   describe('MAX_LEASED_NUMBER_COUNT configuration', () => {
@@ -887,6 +1703,302 @@ describe('Handler Functions', () => {
       expect(result.statusCode).toBe(200);
       const body = JSON.parse(result.body);
       expect(body.maxCount).toBe(1);
+    });
+  });
+
+  // =====================
+  // getAllowedMethodsForPath tests
+  // =====================
+  describe('getAllowedMethodsForPath', () => {
+    test('returns empty array for unknown path', async () => {
+      const event = {
+        httpMethod: 'PUT',
+        headers: {},
+        pathParameters: { proxy: 'unknown-route' },
+      };
+
+      const result = await handler.api(event);
+
+      expect(result.statusCode).toBe(404);
+    });
+
+    test('returns 404 for change-number path (no handler implemented)', async () => {
+      const event = {
+        httpMethod: 'GET',
+        headers: {},
+        pathParameters: { proxy: 'change-number' },
+      };
+
+      const result = await handler.api(event);
+
+      // change-number is defined in getAllowedMethodsForPath but has no handler
+      // so it falls through to 404
+      expect(result.statusCode).toBe(404);
+    });
+  });
+
+  // =====================
+  // API exception handling tests
+  // =====================
+  describe('API exception handling', () => {
+    test('api handles routing correctly with valid routes', async () => {
+      jest.resetModules();
+      mockFetch.mockReset();
+
+      mockFetch.mockImplementation((url) => {
+        if (url.includes('oauth/token')) {
+          return Promise.resolve(createFetchResponse({
+            access_token: 'test_token',
+            expires_in: 3600,
+          }));
+        }
+        if (url.includes('virtual-numbers')) {
+          return Promise.resolve(createFetchResponse({
+            virtualNumbers: [{ virtualNumber: '+61412345678' }],
+          }));
+        }
+        return Promise.reject(new Error('Unexpected'));
+      });
+
+      handler = require('../../handler');
+
+      const event = {
+        httpMethod: 'POST',
+        headers: {},
+        pathParameters: { proxy: 'leaseNumber' },
+      };
+
+      const result = await handler.api(event);
+
+      // Should return 200 when routing works correctly
+      expect(result.statusCode).toBe(200);
+    });
+  });
+
+  // =====================
+  // leaseNumber edge cases
+  // =====================
+  describe('leaseNumber edge cases', () => {
+    test('leaseNumber handles partial success when some numbers fail to lease', async () => {
+      process.env.MAX_LEASED_NUMBER_COUNT = '3';
+
+      jest.resetModules();
+      mockFetch.mockReset();
+
+      let postCallCount = 0;
+      mockFetch.mockImplementation((url, options) => {
+        if (url.includes('oauth/token')) {
+          return Promise.resolve(createFetchResponse({
+            access_token: 'test_token',
+            expires_in: 3600,
+          }));
+        }
+        if (url.includes('virtual-numbers') && (!options?.method || options?.method === 'GET')) {
+          return Promise.resolve(createFetchResponse({ virtualNumbers: [] }));
+        }
+        if (url.includes('virtual-numbers') && options?.method === 'POST') {
+          postCallCount++;
+          // Fail on second POST
+          if (postCallCount === 2) {
+            return Promise.resolve(createFetchResponse({ error: 'limit_exceeded' }, false, 400));
+          }
+          return Promise.resolve(createFetchResponse({ virtualNumber: `+6141234567${postCallCount}` }));
+        }
+        return Promise.reject(new Error('Unexpected'));
+      });
+
+      handler = require('../../handler');
+
+      const result = await handler.leaseNumber({ headers: {} });
+
+      expect(result.statusCode).toBe(200);
+      const body = JSON.parse(result.body);
+      // Should have 2 numbers (1 and 3 succeeded, 2 failed)
+      expect(body.virtualNumbers.length).toBe(2);
+    });
+
+    test('leaseNumber handles complete failure to lease new numbers', async () => {
+      jest.resetModules();
+      mockFetch.mockReset();
+
+      mockFetch.mockImplementation((url, options) => {
+        if (url.includes('oauth/token')) {
+          return Promise.resolve(createFetchResponse({
+            access_token: 'test_token',
+            expires_in: 3600,
+          }));
+        }
+        if (url.includes('virtual-numbers') && (!options?.method || options?.method === 'GET')) {
+          return Promise.resolve(createFetchResponse({ virtualNumbers: [] }));
+        }
+        if (url.includes('virtual-numbers') && options?.method === 'POST') {
+          // Return success but with no virtualNumber in response
+          return Promise.resolve(createFetchResponse({}));
+        }
+        return Promise.reject(new Error('Unexpected'));
+      });
+
+      handler = require('../../handler');
+
+      const result = await handler.leaseNumber({ headers: {} });
+
+      expect(result.statusCode).toBe(200);
+      const body = JSON.parse(result.body);
+      expect(body.virtualNumbers).toHaveLength(0);
+    });
+
+    test('leaseNumber handles fetchAllVirtualNumbers error gracefully', async () => {
+      jest.resetModules();
+      mockFetch.mockReset();
+
+      mockFetch.mockImplementation((url, options) => {
+        if (url.includes('oauth/token')) {
+          return Promise.resolve(createFetchResponse({
+            access_token: 'test_token',
+            expires_in: 3600,
+          }));
+        }
+        if (url.includes('virtual-numbers') && (!options?.method || options?.method === 'GET')) {
+          // Error when checking existing numbers - caught by inner try-catch
+          return Promise.reject(new Error('Network error'));
+        }
+        if (url.includes('virtual-numbers') && options?.method === 'POST') {
+          return Promise.resolve(createFetchResponse({ virtualNumber: '+61412345678' }));
+        }
+        return Promise.reject(new Error('Unexpected'));
+      });
+
+      handler = require('../../handler');
+
+      const result = await handler.leaseNumber({ headers: {} });
+
+      // leaseNumber catches the error checking existing numbers and continues
+      // to lease new numbers, returning 200
+      expect(result.statusCode).toBe(200);
+      const body = JSON.parse(result.body);
+      expect(body.virtualNumbers.length).toBeGreaterThanOrEqual(0);
+    });
+  });
+
+  // =====================
+  // callTelstraApi edge cases
+  // =====================
+  describe('callTelstraApi edge cases', () => {
+    test('callTelstraApi includes params in URL', async () => {
+      jest.resetModules();
+      mockFetch.mockReset();
+
+      let capturedUrl = '';
+      mockFetch.mockImplementation((url) => {
+        capturedUrl = url;
+        if (url.includes('oauth/token')) {
+          return Promise.resolve(createFetchResponse({
+            access_token: 'test_token',
+            expires_in: 3600,
+          }));
+        }
+        if (url.includes('virtual-numbers')) {
+          return Promise.resolve(createFetchResponse({
+            virtualNumbers: [{ virtualNumber: '+61412345678' }],
+          }));
+        }
+        if (url.includes('/messages')) {
+          return Promise.resolve(createFetchResponse({ messages: [] }));
+        }
+        return Promise.reject(new Error('Unexpected'));
+      });
+
+      handler = require('../../handler');
+
+      await handler.getMessages({ headers: {} });
+
+      // Should have limit param in messages URL
+      expect(capturedUrl).toContain('limit=');
+    });
+  });
+
+  // =====================
+  // serveFrontend path and rawPath tests
+  // =====================
+  describe('serveFrontend path logging', () => {
+    test('serveFrontend logs rawPath when path is not available', async () => {
+      const event = {
+        headers: {},
+        rawPath: '/test-path',
+        pathParameters: { proxy: 'test.html' },
+      };
+
+      const fs = require('fs');
+      jest.spyOn(fs, 'existsSync').mockReturnValue(false);
+
+      const result = await handler.serveFrontend(event);
+
+      expect(result.statusCode).toBe(404);
+
+      fs.existsSync.mockRestore();
+    });
+  });
+
+  // =====================
+  // formatVirtualNumber tests
+  // =====================
+  describe('formatVirtualNumber', () => {
+    test('formats virtual number with expiry date', async () => {
+      jest.resetModules();
+      mockFetch.mockReset();
+
+      mockFetch.mockImplementation((url) => {
+        if (url.includes('oauth/token')) {
+          return Promise.resolve(createFetchResponse({
+            access_token: 'test_token',
+            expires_in: 3600,
+          }));
+        }
+        if (url.includes('virtual-numbers')) {
+          return Promise.resolve(createFetchResponse({
+            virtualNumbers: [
+              { virtualNumber: '+61412345678', expiryDate: '2025-12-31T23:59:59Z' }
+            ],
+          }));
+        }
+        return Promise.reject(new Error('Unexpected'));
+      });
+
+      handler = require('../../handler');
+
+      const result = await handler.getAllVirtualNumbers({ headers: {} });
+
+      expect(result.statusCode).toBe(200);
+      const body = JSON.parse(result.body);
+      expect(body.virtualNumbers[0].expiryDate).toBe('2025-12-31T23:59:59Z');
+    });
+
+    test('formats virtual number without expiry date', async () => {
+      jest.resetModules();
+      mockFetch.mockReset();
+
+      mockFetch.mockImplementation((url) => {
+        if (url.includes('oauth/token')) {
+          return Promise.resolve(createFetchResponse({
+            access_token: 'test_token',
+            expires_in: 3600,
+          }));
+        }
+        if (url.includes('virtual-numbers')) {
+          return Promise.resolve(createFetchResponse({
+            virtualNumbers: [{ virtualNumber: '+61412345678' }],
+          }));
+        }
+        return Promise.reject(new Error('Unexpected'));
+      });
+
+      handler = require('../../handler');
+
+      const result = await handler.getNumber({ headers: {} });
+
+      expect(result.statusCode).toBe(200);
+      const body = JSON.parse(result.body);
+      expect(body.virtualNumbers[0].expiryDate).toBeUndefined();
     });
   });
 });

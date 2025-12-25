@@ -35,7 +35,9 @@
       "Bash(git -C \"C:\\\\Users\\\\logan\\\\Downloads\\\\sms-otp-burner\" log --oneline -5)",
       "Bash(git -C \"C:\\\\Users\\\\logan\\\\Downloads\\\\sms-otp-burner\" commit --amend --no-edit)",
       "Bash(git -C \"C:\\\\Users\\\\logan\\\\Downloads\\\\sms-otp-burner\" push --force-with-lease)",
-      "Bash(git -C \"C:\\\\Users\\\\logan\\\\Downloads\\\\sms-otp-burner\" show 3827250:serverless.yml)"
+      "Bash(git -C \"C:\\\\Users\\\\logan\\\\Downloads\\\\sms-otp-burner\" show 3827250:serverless.yml)",
+      "Bash(yarn test:backend:*)",
+      "Bash(npm test:*)"
     ]
   }
 }
