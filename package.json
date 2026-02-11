@@ -31,11 +31,12 @@
     "web-vitals": "^5.1.0"
   },
   "devDependencies": {
-    "@eslint/js": "^9.0.0",
+    "@eslint/compat": "^2.0.0",
+    "@eslint/js": "^10.0.0",
     "@playwright/test": "^1.49.1",
     "babel-jest": "^30.2.0",
     "concurrently": "^9.2.1",
-    "eslint": "^9.0.0",
+    "eslint": "^10.0.0",
     "eslint-plugin-react": "^7.37.0",
     "eslint-plugin-react-hooks": "^5.2.0",
     "globals": "^16.0.0",
@@ -45,6 +46,13 @@
     "serverless": "^4.27.0",
     "serverless-dotenv-plugin": "^6.0.0",
     "serverless-offline": "^14.4.0"
+  },
+  "jest": {
+    "collectCoverageFrom": [
+      "src/**/*.js",
+      "!src/index.js",
+      "!src/__tests__/**"
+    ]
   },
   "browserslist": {
     "production": [

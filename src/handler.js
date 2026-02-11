@@ -95,19 +95,23 @@ const log = {
 };
 
 const sanitizeLogData = (data) => {
+  if (!data || typeof data !== 'object') return data;
   const sanitized = { ...data };
-  // Remove sensitive fields
   const sensitiveFields = ['authorization', 'Authorization', 'client_secret', 'access_token', 'body'];
   for (const field of sensitiveFields) {
-    if (sanitized[field]) {
-      sanitized[field] = '[REDACTED]';
-    }
-    if (sanitized.headers && sanitized.headers[field]) {
-      sanitized.headers[field] = '[REDACTED]';
+    if (field in sanitized) sanitized[field] = '[REDACTED]';
+  }
+  if (sanitized.headers && typeof sanitized.headers === 'object') {
+    sanitized.headers = { ...sanitized.headers };
+    for (const field of sensitiveFields) {
+      if (field in sanitized.headers) sanitized.headers[field] = '[REDACTED]';
     }
   }
   return sanitized;
 };
+
+// Exported for testing
+module.exports._sanitizeLogData = sanitizeLogData;
 
 // =============================================================================
 // TELSTRA API (using native fetch)
@@ -364,7 +368,7 @@ module.exports.releaseNumber = async (event) => {
   }
 
   // Always fetch current numbers from API (no stale cache)
-  let existingNumbers = [];
+  let existingNumbers = []; // eslint-disable-line no-useless-assignment
   try {
     existingNumbers = await fetchAllVirtualNumbers();
   } catch (error) {
