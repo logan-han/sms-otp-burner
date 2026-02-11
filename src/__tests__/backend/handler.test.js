@@ -81,7 +81,7 @@ describe('Handler Functions', () => {
       mockFetch.mockReset();
 
       // Mock successful auth token followed by API calls
-      mockFetch.mockImplementation((url, options) => {
+      mockFetch.mockImplementation((url, _options) => {
         if (url.includes('oauth/token')) {
           return Promise.resolve(createFetchResponse({
             access_token: 'test_access_token',
@@ -121,7 +121,7 @@ describe('Handler Functions', () => {
     });
 
     test('leaseNumber returns existing numbers when max count is reached', async () => {
-      mockFetch.mockImplementation((url, options) => {
+      mockFetch.mockImplementation((url, _options) => {
         if (url.includes('oauth/token')) {
           return Promise.resolve(createFetchResponse({
             access_token: 'test_access_token',
