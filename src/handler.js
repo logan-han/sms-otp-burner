@@ -364,7 +364,7 @@ module.exports.releaseNumber = async (event) => {
   }
 
   // Always fetch current numbers from API (no stale cache)
-  let existingNumbers = [];
+  let existingNumbers;
   try {
     existingNumbers = await fetchAllVirtualNumbers();
   } catch (error) {
