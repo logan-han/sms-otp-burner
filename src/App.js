@@ -58,7 +58,7 @@ function App() {
     }
   }, []);
 
-  const fetchMessages = useCallback(async (subscriptionData = null) => {
+  const fetchMessages = useCallback(async () => {
     setError(null);
     try {
       const response = await fetch(`${API_BASE_URL}/messages`);
