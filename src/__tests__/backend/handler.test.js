@@ -2023,7 +2023,7 @@ describe('Handler Functions', () => {
 
       // Override leaseNumber on module.exports to throw
       const originalLeaseNumber = handler.leaseNumber;
-      handler.leaseNumber = jest.fn().mockImplementation(() => {
+      handler.leaseNumber = jest.fn(() => {
         throw new Error('Unexpected crash');
       });
 
@@ -2064,28 +2064,27 @@ describe('Handler Functions', () => {
       // after fetchAllVirtualNumbers succeeds (line 301: existingNumbers.map(...))
       const originalMap = Array.prototype.map;
       let shouldThrow = false;
-      Array.prototype.map = function(...args) {
-        if (shouldThrow) {
-          shouldThrow = false;
-          Array.prototype.map = originalMap;
-          throw new Error('Simulated crash');
-        }
-        return originalMap.apply(this, args);
-      };
 
-      // The first .map() call in leaseNumber is on line 301
-      // We set it to throw on the next map call after we invoke leaseNumber
-      shouldThrow = true;
+      try {
+        Array.prototype.map = function(...args) {
+          if (shouldThrow) {
+            shouldThrow = false;
+            throw new Error('Simulated crash');
+          }
+          return originalMap.apply(this, args);
+        };
 
-      const result = await handler.leaseNumber({
-        headers: { origin: 'http://localhost:3000' },
-      });
+        shouldThrow = true;
 
-      // Ensure map is restored even if test fails
-      Array.prototype.map = originalMap;
+        const result = await handler.leaseNumber({
+          headers: { origin: 'http://localhost:3000' },
+        });
 
-      expect(result.statusCode).toBe(500);
-      expect(JSON.parse(result.body).message).toBe('Failed to lease numbers');
+        expect(result.statusCode).toBe(500);
+        expect(JSON.parse(result.body).message).toBe('Failed to lease numbers');
+      } finally {
+        Array.prototype.map = originalMap;
+      }
     });
 
     test('formats virtual number without expiry date', async () => {
