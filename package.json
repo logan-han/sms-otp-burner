@@ -47,6 +47,13 @@
     "serverless-dotenv-plugin": "^6.0.0",
     "serverless-offline": "^14.4.0"
   },
+  "jest": {
+    "collectCoverageFrom": [
+      "src/**/*.js",
+      "!src/index.js",
+      "!src/__tests__/**"
+    ]
+  },
   "browserslist": {
     "production": [
       ">0.2%",
