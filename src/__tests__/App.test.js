@@ -586,4 +586,105 @@ describe('App Component', () => {
       expect(refreshButton).toBeDisabled();
     }, { timeout: 2000 });
   });
+
+  test('handles fetchMessages network error (catch branch)', async () => {
+    const mockNumber = {
+      virtualNumber: '+61412345678',
+      msisdn: '+61412345678',
+      subscriptionId: 'sub123',
+      expiryDate: new Date(Date.now() + 86400000).toISOString(),
+      expiresAt: new Date(Date.now() + 86400000).toISOString()
+    };
+
+    const fetchSpy = jest.fn().mockImplementation((url) => {
+      if (url.includes('/api/virtual-numbers')) {
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({ virtualNumbers: [mockNumber] })
+        });
+      } else if (url.includes('/api/messages')) {
+        return Promise.reject(new Error('Network failure'));
+      }
+      return Promise.reject(new Error(`Unmocked URL: ${url}`));
+    });
+
+    global.fetch = fetchSpy;
+
+    render(<App />);
+
+    await waitFor(() => {
+      expect(screen.getByText(/Error fetching messages/)).toBeInTheDocument();
+    }, { timeout: 3000 });
+  });
+
+  test('displays number using msisdn fallback when virtualNumber is absent', async () => {
+    const mockNumber = {
+      msisdn: '+61400000000',
+      subscriptionId: 'sub999',
+      expiryDate: new Date(Date.now() + 86400000).toISOString(),
+      expiresAt: new Date(Date.now() + 86400000).toISOString()
+    };
+
+    fetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ virtualNumbers: [mockNumber] })
+    });
+
+    render(<App />);
+
+    await waitFor(() => {
+      expect(screen.getByText('+61400000000')).toBeInTheDocument();
+    });
+  });
+
+  test('handles leaseNumber response with missing virtualNumbers field', async () => {
+    fetch
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ virtualNumbers: [] })
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({})
+      });
+
+    render(<App />);
+
+    await waitFor(() => {
+      expect(fetch).toHaveBeenCalledWith('/api/leaseNumber', { method: 'POST' });
+    });
+  });
+
+  test('handles messages response with missing messages field', async () => {
+    const mockNumber = {
+      virtualNumber: '+61412345678',
+      msisdn: '+61412345678',
+      subscriptionId: 'sub123',
+      expiryDate: new Date(Date.now() + 86400000).toISOString(),
+      expiresAt: new Date(Date.now() + 86400000).toISOString()
+    };
+
+    const fetchSpy = jest.fn().mockImplementation((url) => {
+      if (url.includes('/api/virtual-numbers')) {
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({ virtualNumbers: [mockNumber] })
+        });
+      } else if (url.includes('/api/messages')) {
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({})
+        });
+      }
+      return Promise.reject(new Error(`Unmocked URL: ${url}`));
+    });
+
+    global.fetch = fetchSpy;
+
+    render(<App />);
+
+    await waitFor(() => {
+      expect(screen.getByText('No messages received yet.')).toBeInTheDocument();
+    }, { timeout: 3000 });
+  });
 });
