@@ -368,7 +368,7 @@ module.exports.releaseNumber = async (event) => {
   }
 
   // Always fetch current numbers from API (no stale cache)
-  let existingNumbers;
+  let existingNumbers = []; // eslint-disable-line no-useless-assignment
   try {
     existingNumbers = await fetchAllVirtualNumbers();
   } catch (error) {
