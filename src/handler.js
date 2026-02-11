@@ -294,8 +294,8 @@ module.exports.leaseNumber = async (event) => {
     try {
       existingNumbers = await fetchAllVirtualNumbers();
       log.info(`Found ${existingNumbers.length} existing virtual numbers`);
-    } catch {
-      log.warn('Error checking existing virtual numbers');
+    } catch (error) {
+      log.warn('Error checking existing virtual numbers', error);
     }
 
     const allExistingNumbers = existingNumbers.map(vn => vn.virtualNumber);
