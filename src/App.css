@@ -47,10 +47,10 @@ button { font-family: inherit; }
 .mono { font-family: var(--font-mono); font-feature-settings: "tnum", "zero"; }
 
 .shell {
-  max-width: 1180px;
+  width: min(100% - 56px, 1480px);
   min-height: 100vh;
   margin: 0 auto;
-  padding: 18px 28px 16px;
+  padding: 18px 0 16px;
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -481,7 +481,7 @@ button { font-family: inherit; }
 }
 
 @media (max-width: 820px) {
-  .shell { padding: 14px; }
+  .shell { width: 100%; padding: 14px; }
   .topbar, .toolbar, .toolbar-left, .otp-hero-row { align-items: stretch; flex-direction: column; }
   .topbar-meta { justify-content: flex-start; }
   .numbers-strip { overflow-x: auto; }

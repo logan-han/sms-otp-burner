@@ -410,6 +410,7 @@ module.exports.getNumber = async (event) => {
     if (virtualNumbers.length > 0) {
       return createResponse(200, {
         virtualNumbers: virtualNumbers.map(vn => formatVirtualNumber(vn.virtualNumber)),
+        maxCount: MAX_LEASED_NUMBER_COUNT,
       }, requestOrigin);
     }
 
@@ -435,11 +436,12 @@ module.exports.getAllVirtualNumbers = async (event) => {
       virtualNumbers: virtualNumbers.map(vn =>
         formatVirtualNumber(vn.virtualNumber, true, vn.expiryDate)
       ),
+      maxCount: MAX_LEASED_NUMBER_COUNT,
     }, requestOrigin);
 
   } catch (error) {
     log.error('Error fetching virtual numbers', error);
-    return createResponse(200, { virtualNumbers: [] }, requestOrigin);
+    return createResponse(200, { virtualNumbers: [], maxCount: MAX_LEASED_NUMBER_COUNT }, requestOrigin);
   }
 };
 
