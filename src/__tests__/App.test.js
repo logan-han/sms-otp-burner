@@ -22,7 +22,7 @@ const mockSuccessfulBoot = (messages = []) => {
   fetch
     .mockResolvedValueOnce({
       ok: true,
-      json: async () => ({ virtualNumbers: [activeNumber] }),
+      json: async () => ({ virtualNumbers: [activeNumber], maxCount: 1 }),
     })
     .mockResolvedValueOnce({
       ok: true,
@@ -124,6 +124,18 @@ describe('App Component', () => {
     await waitFor(() => {
       expect(fetch).toHaveBeenCalledWith('/api/leaseNumber', { method: 'POST' });
     });
+  });
+
+  test('hides the lease action when the max lease count is reached', async () => {
+    mockSuccessfulBoot();
+
+    render(<App />);
+
+    await waitFor(() => {
+      expect(screen.getByText('+61 412 345 678')).toBeInTheDocument();
+    });
+
+    expect(screen.queryByRole('button', { name: /lease new number/i })).not.toBeInTheDocument();
   });
 
   test('handles API errors gracefully', async () => {
