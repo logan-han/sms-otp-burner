@@ -381,7 +381,7 @@ button { font-family: inherit; }
   overflow: hidden;
 }
 .card-to { color: var(--ink-3); font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.card-foot-btn, .icon-btn {
+.icon-btn {
   display: inline-grid;
   place-items: center;
   width: 30px;
@@ -392,7 +392,7 @@ button { font-family: inherit; }
   color: var(--ink-3);
   cursor: pointer;
 }
-.card-foot-btn:hover, .icon-btn:hover { background: var(--panel-2); color: var(--ink); }
+.icon-btn:hover { background: var(--panel-2); color: var(--ink); }
 .danger:hover { color: var(--danger); border-color: oklch(0.85 0.08 25); }
 
 .empty-grid, .loading-initial {

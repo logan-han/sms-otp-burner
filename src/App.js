@@ -16,7 +16,6 @@ const IconRefresh = (p) => <Icon {...p}><path d="M21 12a9 9 0 1 1-3.5-7.1" /><pa
 const IconSearch = (p) => <Icon {...p}><circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" /></Icon>;
 const IconX = (p) => <Icon {...p}><path d="M6 6l12 12M18 6L6 18" /></Icon>;
 const IconInbox = (p) => <Icon {...p}><path d="M3 13h5l2 3h4l2-3h5" /><path d="M5 5h14l2 8v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-6L5 5Z" /></Icon>;
-const IconTrash = (p) => <Icon {...p}><path d="M4 7h16" /><path d="M9 7V4h6v3" /><path d="M6 7l1 13a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-13" /></Icon>;
 const IconPlus = (p) => <Icon {...p}><path d="M12 5v14M5 12h14" /></Icon>;
 
 const normalizeNumber = (number) => {
@@ -216,11 +215,6 @@ function App() {
     setTimeout(() => setToast((current) => (current && Date.now() - current.ts >= 1500 ? null : current)), 1700);
   };
 
-  const remove = (id) => {
-    setMessages((current) => current.filter((message) => message.id !== id));
-    if (expandedId === id) setExpandedId(null);
-  };
-
   const numberByMsisdn = useMemo(() => {
     const map = {};
     leasedNumbers.forEach((number) => {
@@ -353,7 +347,6 @@ function App() {
                 </div>
                 <footer className="card-foot">
                   <span className="card-to mono">to {numberByMsisdn[message.to]?.display || message.to}</span>
-                  <button className="card-foot-btn" onClick={(event) => { event.stopPropagation(); remove(message.id); }} title="Delete"><IconTrash size={13} /></button>
                 </footer>
               </article>
             );
@@ -370,7 +363,6 @@ function App() {
                 <div className="modal-from-meta mono">to {numberByMsisdn[expanded.to]?.display || expanded.to} . {new Date(expanded.receivedAt).toLocaleString()}</div>
               </div>
               <div className="modal-actions">
-                <button className="icon-btn danger" onClick={() => remove(expanded.id)} title="Delete"><IconTrash size={14} /></button>
                 <button className="icon-btn" onClick={() => setExpandedId(null)} title="Close"><IconX size={14} /></button>
               </div>
             </header>
