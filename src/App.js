@@ -341,16 +341,16 @@ function App() {
                   <span className="card-time mono">{formatRelative(message.receivedAt)}</span>
                 </header>
 
-                {otp ? (
-                  <button type="button" className="card-otp" onClick={(event) => { event.stopPropagation(); copy(otp.digits, `card-${message.id}`); }} title="Click to copy">
-                    <span className="card-otp-digits mono">{otp.digits.split('').map((digit, index) => <span key={index} className="card-otp-digit">{digit}</span>)}</span>
-                    <span className="card-otp-action">{copiedKey === `card-${message.id}` ? <><IconCheck size={13} /> copied</> : <><IconCopy size={13} /> copy</>}</span>
-                  </button>
-                ) : (
-                  <div className="card-no-otp"><span className="card-no-otp-label">no code detected</span></div>
-                )}
+                <div className="card-main">
+                  {otp ? (
+                    <button type="button" className="card-otp" onClick={(event) => { event.stopPropagation(); copy(otp.digits, `card-${message.id}`); }} title="Click to copy">
+                      <span className="card-otp-digits mono">{otp.digits.split('').map((digit, index) => <span key={index} className="card-otp-digit">{digit}</span>)}</span>
+                      <span className="card-otp-action">{copiedKey === `card-${message.id}` ? <><IconCheck size={13} /> copied</> : <><IconCopy size={13} /> copy</>}</span>
+                    </button>
+                  ) : null}
 
-                <p className="card-body message-cell">{message.body}</p>
+                  <p className="card-body message-cell">{message.body}</p>
+                </div>
                 <footer className="card-foot">
                   <span className="card-to mono">to {numberByMsisdn[message.to]?.display || message.to}</span>
                   <button className="card-foot-btn" onClick={(event) => { event.stopPropagation(); remove(message.id); }} title="Delete"><IconTrash size={13} /></button>
