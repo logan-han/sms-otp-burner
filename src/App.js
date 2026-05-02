@@ -84,6 +84,7 @@ function App() {
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isLeasing, setIsLeasing] = useState(false);
+  const [maxLeaseCount, setMaxLeaseCount] = useState(null);
   const [error, setError] = useState(null);
   const [now, setNow] = useState(Date.now());
   const [toast, setToast] = useState(null);
@@ -98,6 +99,9 @@ function App() {
     const response = await fetch(`${API_BASE_URL}/virtual-numbers`);
     if (response.ok) {
       const data = await response.json();
+      if (Number.isFinite(data.maxCount)) {
+        setMaxLeaseCount(data.maxCount);
+      }
       const activeNumbers = (data.virtualNumbers || [])
         .map(normalizeNumber)
         .filter((num) => !num.expiryDate || new Date(num.expiryDate) > new Date());
@@ -142,6 +146,9 @@ function App() {
         throw { response: { data: errData } };
       }
       const data = await response.json();
+      if (Number.isFinite(data.maxCount)) {
+        setMaxLeaseCount(data.maxCount);
+      }
       const numbers = (data.virtualNumbers || []).map(normalizeNumber);
       setLeasedNumbers(numbers);
       await fetchMessages();
@@ -234,6 +241,7 @@ function App() {
   }, [query, scopedMessages]);
 
   const expanded = messages.find((message) => message.id === expandedId);
+  const canLeaseMore = maxLeaseCount == null || leasedNumbers.length < maxLeaseCount;
 
   return (
     <div className="shell">
@@ -289,11 +297,13 @@ function App() {
           );
         })}
 
-        <button className="num-tab lease-tab" onClick={leaseNumber} disabled={isLeasing || isLoading}>
-          <div className="num-tab-label"><IconPlus size={12} /> lease</div>
-          <div className="num-tab-row"><span className="num-tab-num">{isLeasing ? 'Leasing...' : 'New number'}</span></div>
-          <div className="num-tab-meta">request a Telstra virtual number</div>
-        </button>
+        {canLeaseMore && (
+          <button className="num-tab lease-tab" onClick={leaseNumber} disabled={isLeasing || isLoading}>
+            <div className="num-tab-label"><IconPlus size={12} /> lease</div>
+            <div className="num-tab-row"><span className="num-tab-num">{isLeasing ? 'Leasing...' : 'New number'}</span></div>
+            <div className="num-tab-meta">request a Telstra virtual number</div>
+          </button>
+        )}
       </section>
 
       <section className="toolbar">
