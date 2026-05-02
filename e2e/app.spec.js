@@ -6,8 +6,8 @@ test.describe('SMS OTP Burner UI', () => {
     test('should display the app header with title and subtitle', async ({ page }) => {
       await page.goto('/');
 
-      await expect(page.locator('h1')).toContainText('SMS OTP Burner');
-      await expect(page.locator('.subtitle')).toContainText('Temporary SMS numbers for OTP verification');
+      await expect(page.locator('h1')).toContainText('burner/sms');
+      await expect(page.locator('.subtitle')).toContainText('Disposable SMS for OTP verification');
     });
 
     test('should show loading state or content', async ({ page }) => {
@@ -38,7 +38,7 @@ test.describe('SMS OTP Burner UI', () => {
       await page.goto('/');
 
       // Wait for the numbers card or error to appear
-      const numbersCard = page.locator('.numbers-card, .number-card');
+      const numbersCard = page.locator('.numbers-strip');
       const errorBanner = page.locator('.error-banner');
 
       // Use .first() to avoid strict mode violation when both elements exist
@@ -70,13 +70,10 @@ test.describe('SMS OTP Burner UI', () => {
       const hasButton = await copyButton.count();
 
       if (hasButton > 0) {
-        // Check initial state has clipboard emoji (📋)
-        await expect(copyButton).toContainText(/📋|copy/i);
-
         await copyButton.click();
 
-        // After click, should show checkmark (✅)
-        await expect(copyButton).toContainText(/✅/);
+        // After click, the button advertises the copied state through its title.
+        await expect(copyButton).toHaveAttribute('title', 'Copied!');
       }
     });
   });
@@ -88,13 +85,13 @@ test.describe('SMS OTP Burner UI', () => {
       // Wait for main content
       await page.waitForSelector('.main-content, .error-banner, .loading-initial', { timeout: 30000 });
 
-      const messagesCard = page.locator('.messages-card');
+      const messagesToolbar = page.locator('.toolbar');
       const mainContent = page.locator('.main-content');
 
-      // If main content is visible, messages card should be there
+      // If main content is visible, the inbox toolbar should be there.
       if (await mainContent.isVisible()) {
-        await expect(messagesCard).toBeVisible();
-        await expect(page.locator('.messages-card h2')).toContainText('Received Messages');
+        await expect(messagesToolbar).toBeVisible();
+        await expect(page.locator('.toolbar-title')).toContainText('Inbox');
       }
     });
 
@@ -107,7 +104,7 @@ test.describe('SMS OTP Burner UI', () => {
 
       if (await page.locator('.main-content').isVisible()) {
         await expect(refreshBtn).toBeVisible();
-        await expect(refreshBtn).toContainText('Refresh');
+        await expect(refreshBtn).toContainText('check for new');
       }
     });
 
@@ -117,27 +114,53 @@ test.describe('SMS OTP Burner UI', () => {
       await page.waitForSelector('.main-content, .error-banner', { timeout: 30000 });
 
       const noMessages = page.locator('.no-messages');
-      const messagesTable = page.locator('.messages-table');
+      const messageRows = page.locator('.message-row');
 
       if (await page.locator('.main-content').isVisible()) {
-        // Either no-messages or messages-table should be visible
+        // Either no-messages or message rows should be visible.
         const hasNoMessages = await noMessages.isVisible();
-        const hasTable = await messagesTable.isVisible();
+        const hasRows = await messageRows.first().isVisible();
 
-        expect(hasNoMessages || hasTable).toBeTruthy();
+        expect(hasNoMessages || hasRows).toBeTruthy();
       }
     });
 
-    test('messages table should have correct columns', async ({ page }) => {
+    test('message rows should show sender, message, and recipient', async ({ page }) => {
+      const mockMessage = {
+        to: '+61412345678',
+        from: '+61498765432',
+        body: 'Your OTP is 123456',
+        receivedAt: new Date().toISOString(),
+      };
+
+      await page.route('**/api/virtual-numbers', (route) => {
+        route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({
+            virtualNumbers: [{
+              virtualNumber: '+61412345678',
+              expiryDate: new Date(Date.now() + 86400000).toISOString(),
+            }],
+          }),
+        });
+      });
+
+      await page.route('**/api/messages', (route) => {
+        route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({ messages: [mockMessage] }),
+        });
+      });
+
       await page.goto('/');
 
-      await page.waitForSelector('.main-content, .error-banner', { timeout: 30000 });
-
-      const messagesTable = page.locator('.messages-table');
-
-      if (await messagesTable.isVisible()) {
-        await expect(page.locator('th')).toContainText(['To Number', 'From', 'Message', 'Date', 'Time']);
-      }
+      const messageRow = page.locator('.message-row').first();
+      await expect(messageRow).toBeVisible({ timeout: 10000 });
+      await expect(messageRow.locator('.card-from-name')).toContainText(mockMessage.from);
+      await expect(messageRow.locator('.message-cell')).toContainText(mockMessage.body);
+      await expect(messageRow.locator('.card-to')).toContainText('to +61 412 345 678');
     });
   });
 
@@ -209,17 +232,12 @@ test.describe('SMS OTP Burner UI', () => {
       }
     });
 
-    test('should have proper heading hierarchy', async ({ page }) => {
+    test('should expose the primary page heading', async ({ page }) => {
       await page.goto('/');
 
-      // h1 should exist
       const h1 = page.locator('h1');
       await expect(h1).toHaveCount(1);
-
-      // h2s should exist for subsections
-      const h2s = page.locator('h2');
-      const h2Count = await h2s.count();
-      expect(h2Count).toBeGreaterThan(0);
+      await expect(h1).toContainText('burner/sms');
     });
   });
 
@@ -268,7 +286,7 @@ test.describe('SMS OTP Burner UI', () => {
 
       await page.goto('/');
 
-      await expect(page.locator('.number-value')).toContainText(mockNumber, { timeout: 10000 });
+      await expect(page.getByRole('tab', { name: /\+61 412 345 678/ })).toBeVisible({ timeout: 10000 });
     });
 
     test('should display messages from API response', async ({ page }) => {
