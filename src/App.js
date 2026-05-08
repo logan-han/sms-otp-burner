@@ -252,9 +252,8 @@ function App() {
           </div>
         </div>
         <div className="topbar-meta">
-          <span className="meta-pill"><span className="live-dot" /> live</span>
           <span className="meta-pill mono">{formatClock(now)}</span>
-          <span className="meta-pill subtle">{leasedNumbers.length} active leases</span>
+          <span className="meta-pill subtle">{leasedNumbers.length} leased number{leasedNumbers.length === 1 ? '' : 's'}</span>
         </div>
       </header>
 
@@ -280,7 +279,7 @@ function App() {
           return (
             <button key={number.virtualNumber} role="tab" aria-selected={isActive} className={`num-tab${isActive ? ' on' : ''}`} onClick={() => setActiveNumber(number.virtualNumber)}>
               <div className="num-tab-row">
-                <div className="num-tab-label"><span className="num-tab-dot" /> idle</div>
+                <div className="num-tab-label"><span className="num-tab-dot" /> number</div>
                 <span className="num-tab-copy" role="button" tabIndex={0} onClick={(event) => { event.stopPropagation(); copy(number.virtualNumber, `num-${number.virtualNumber}`); }} onKeyDown={(event) => { if (event.key === 'Enter') copy(number.virtualNumber, `num-${number.virtualNumber}`); }} title="Copy number">
                   {copiedKey === `num-${number.virtualNumber}` ? <IconCheck size={13} /> : <IconCopy size={13} />}
                 </span>
@@ -315,7 +314,7 @@ function App() {
       </section>
 
       {isLoading ? (
-        <div className="loading-initial"><div className="loading-spinner-large">...</div><h2>Setting up your virtual numbers</h2><p>Checking active leases and recent SMS.</p></div>
+        <div className="loading-initial"><div className="loading-spinner-large">...</div><h2>Setting up your virtual numbers</h2><p>Checking recent SMS.</p></div>
       ) : (
         <main className="grid main-content">
           {filtered.length === 0 && (
