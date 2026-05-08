@@ -1,7 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="burner sms">
-  <rect width="64" height="64" rx="14" fill="#162018"/>
-  <circle cx="22" cy="20" r="7" fill="#f7faf5"/>
-  <circle cx="42" cy="20" r="7" fill="#2fce72"/>
-  <rect x="15" y="39" width="34" height="10" rx="5" fill="#f7faf5"/>
-  <path d="M19 44h26" stroke="#162018" stroke-width="3" stroke-linecap="round" opacity=".22"/>
+  <rect width="64" height="64" rx="14" fill="#171812"/>
+  <path d="M16 16h32a7 7 0 0 1 7 7v15a7 7 0 0 1-7 7H31L20 54v-9h-4a7 7 0 0 1-7-7V23a7 7 0 0 1 7-7Z" fill="#f7faf5"/>
+  <circle cx="24" cy="31" r="4" fill="#31d677"/>
+  <circle cx="40" cy="31" r="4" fill="#31d677"/>
+  <path d="M28 15 21 31h9l-5 16 18-24H32l5-8Z" fill="#171812"/>
 </svg>
