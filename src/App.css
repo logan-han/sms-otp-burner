@@ -100,13 +100,6 @@ button { font-family: inherit; }
 }
 .meta-pill.subtle { background: transparent; text-transform: none; letter-spacing: 0; color: var(--ink-3); }
 .meta-pill.mono { text-transform: none; letter-spacing: 0; font-size: 12px; }
-.live-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); animation: livePulse 2s infinite; }
-@keyframes livePulse {
-  0% { box-shadow: 0 0 0 0 oklch(0.72 0.18 145 / 0.6); }
-  70% { box-shadow: 0 0 0 8px oklch(0.72 0.18 145 / 0); }
-  100% { box-shadow: 0 0 0 0 oklch(0.72 0.18 145 / 0); }
-}
-
 .error-banner {
   display: flex;
   align-items: center;

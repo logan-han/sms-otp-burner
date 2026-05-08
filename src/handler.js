@@ -515,7 +515,7 @@ module.exports.serveFrontend = async (event) => {
   }
 
   const buildDir = path.resolve(__dirname, '..', 'build');
-  const filePath = path.resolve(buildDir, requestedPath);
+  let filePath = path.resolve(buildDir, requestedPath);
 
   // Path traversal protection
   if (!filePath.startsWith(buildDir)) {
@@ -528,6 +528,10 @@ module.exports.serveFrontend = async (event) => {
   }
 
   try {
+    if (requestedPath === 'favicon.ico' && !fs.existsSync(filePath)) {
+      filePath = path.resolve(buildDir, 'favicon.svg');
+    }
+
     if (fs.existsSync(filePath)) {
       const contentType = mime.lookup(filePath) || 'application/octet-stream';
 
