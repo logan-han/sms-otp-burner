@@ -31,7 +31,7 @@ export default [
   {
     ...reactBaseConfig,
     files: ["src/**/*.js"],
-    ignores: ["src/handler.js", "src/__tests__/**"],
+    ignores: ["src/handler.js", "src/lib/**", "src/__tests__/**"],
     languageOptions: {
       ...reactBaseConfig.languageOptions,
       globals: {
@@ -41,9 +41,9 @@ export default [
     },
   },
 
-  // Backend handler (Node.js / CommonJS)
+  // Backend handler + lib (Node.js / CommonJS)
   {
-    files: ["src/handler.js"],
+    files: ["src/handler.js", "src/lib/**/*.js"],
     languageOptions: {
       globals: {
         ...globals.node,
