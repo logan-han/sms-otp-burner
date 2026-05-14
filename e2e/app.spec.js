@@ -65,7 +65,8 @@ test.describe('SMS OTP Burner UI', () => {
     });
 
     test('copy icon for a leased number switches to copied state', async ({ page, browserName }) => {
-      test.skip(browserName === 'webkit', 'Clipboard permission not auto-granted on webkit');
+      // grantPermissions clipboard-read is only supported on chromium.
+      test.skip(browserName !== 'chromium', 'Clipboard permission only grantable on chromium');
       await page.context().grantPermissions(['clipboard-read', 'clipboard-write']);
       await mockApi(page, { numbers: [defaultNumber] });
       await page.goto('/');
