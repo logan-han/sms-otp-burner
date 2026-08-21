@@ -188,6 +188,10 @@ function App() {
       />
 
       <Toast toast={toast} />
+
+      <footer className="site-footer">
+        <a href="https://coffee.han.life" target="_blank" rel="noopener noreferrer">☕ Buy me a coffee</a>
+      </footer>
     </div>
   );
 }
