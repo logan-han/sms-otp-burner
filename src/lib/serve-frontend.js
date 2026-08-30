@@ -65,29 +65,40 @@ const serveSpaFallback = (requestOrigin) => {
   };
 };
 
+const forbidden = (requestOrigin) => ({
+  statusCode: 403,
+  headers: { ...getResponseHeaders(requestOrigin), 'Content-Type': 'text/html' },
+  body: '<html><body><h1>403 Forbidden</h1><p>Access denied.</p></body></html>',
+});
+
 const serveFrontend = async (event) => {
   const requestOrigin = getRequestOrigin(event);
 
   log.info('Frontend request', { path: event.path || event.rawPath });
 
   const requestedPath = resolveRequestedPath(event);
-  let filePath = path.resolve(BUILD_DIR, requestedPath);
 
-  if (!filePath.startsWith(BUILD_DIR)) {
+  // Reject traversal before the path is used, then confirm the resolved path stays under BUILD_DIR.
+  if (requestedPath.includes('..') || path.isAbsolute(requestedPath)) {
     log.warn('Path traversal attempt blocked', { requestedPath });
-    return {
-      statusCode: 403,
-      headers: { ...getResponseHeaders(requestOrigin), 'Content-Type': 'text/html' },
-      body: '<html><body><h1>403 Forbidden</h1><p>Access denied.</p></body></html>',
-    };
+    return forbidden(requestOrigin);
+  }
+
+  const filePath = path.resolve(BUILD_DIR, requestedPath);
+  if (!filePath.startsWith(`${BUILD_DIR}${path.sep}`)) {
+    log.warn('Path traversal attempt blocked', { requestedPath });
+    return forbidden(requestOrigin);
   }
 
   try {
-    if (requestedPath === 'favicon.ico' && !fs.existsSync(filePath)) {
-      filePath = path.resolve(BUILD_DIR, 'favicon.svg');
-    }
     if (fs.existsSync(filePath)) {
       return serveFile(filePath, requestOrigin);
+    }
+    if (requestedPath === 'favicon.ico') {
+      const faviconSvg = path.resolve(BUILD_DIR, 'favicon.svg');
+      if (fs.existsSync(faviconSvg)) {
+        return serveFile(faviconSvg, requestOrigin);
+      }
     }
     return serveSpaFallback(requestOrigin);
   } catch (error) {
