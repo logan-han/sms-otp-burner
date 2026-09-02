@@ -34,7 +34,7 @@ jobs:
         run: yarn lint
 
       - name: Run frontend tests
-        run: yarn test:frontend --ci --coverage --watchAll=false
+        run: yarn test:frontend --coverage
 
       - name: Run backend tests
         run: yarn test:backend --ci --coverage
