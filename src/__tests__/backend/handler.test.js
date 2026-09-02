@@ -1,9 +1,20 @@
+const path = require('path');
+
+// handler.js and src/lib are CommonJS loaded via require, which vi.resetModules() does not reach.
+const srcDir = path.resolve(__dirname, '..', '..') + path.sep;
+const loadHandler = () => {
+  Object.keys(require.cache)
+    .filter((id) => id.startsWith(srcDir))
+    .forEach((id) => delete require.cache[id]);
+  return require('../../handler');
+};
+
 describe('Handler Functions', () => {
   const originalEnv = process.env;
   let handler;
 
   // Mock fetch globally
-  const mockFetch = jest.fn();
+  const mockFetch = vi.fn();
   global.fetch = mockFetch;
 
   const createFetchResponse = (data, ok = true, status = 200) => ({
@@ -13,8 +24,7 @@ describe('Handler Functions', () => {
   });
 
   beforeEach(() => {
-    jest.resetModules();
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     mockFetch.mockReset();
 
     process.env = {
@@ -29,12 +39,12 @@ describe('Handler Functions', () => {
     // Default: reject all requests (auth failure)
     mockFetch.mockRejectedValue(new Error('Network error'));
 
-    handler = require('../../handler');
+    handler = loadHandler();
   });
 
   afterEach(() => {
     process.env = originalEnv;
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   // =====================
@@ -77,7 +87,6 @@ describe('Handler Functions', () => {
   // =====================
   describe('Successful API flows', () => {
     beforeEach(() => {
-      jest.resetModules();
       mockFetch.mockReset();
 
       // Mock successful auth token followed by API calls
@@ -91,7 +100,7 @@ describe('Handler Functions', () => {
         return Promise.reject(new Error('Unexpected request: ' + url));
       });
 
-      handler = require('../../handler');
+      handler = loadHandler();
     });
 
     test('leaseNumber successfully leases a new number when none exist', async () => {
@@ -373,7 +382,6 @@ describe('Handler Functions', () => {
   // =====================
   describe('Token caching', () => {
     test('getTelstraAccessToken returns cached token if valid', async () => {
-      jest.resetModules();
       mockFetch.mockReset();
 
       let tokenCallCount = 0;
@@ -393,7 +401,7 @@ describe('Handler Functions', () => {
         return Promise.reject(new Error('Unexpected request: ' + url));
       });
 
-      handler = require('../../handler');
+      handler = loadHandler();
 
       // Make two API calls
       await handler.getNumber({ headers: {} });
@@ -409,7 +417,6 @@ describe('Handler Functions', () => {
   // =====================
   describe('Error handling', () => {
     test('leaseNumber handles API error gracefully', async () => {
-      jest.resetModules();
       mockFetch.mockReset();
 
       mockFetch.mockImplementation((url, options) => {
@@ -428,7 +435,7 @@ describe('Handler Functions', () => {
         return Promise.reject(new Error('Unexpected'));
       });
 
-      handler = require('../../handler');
+      handler = loadHandler();
 
       const result = await handler.leaseNumber({ headers: {} });
 
@@ -438,7 +445,6 @@ describe('Handler Functions', () => {
     });
 
     test('getMessages returns error when API fails', async () => {
-      jest.resetModules();
       mockFetch.mockReset();
 
       mockFetch.mockImplementation((url) => {
@@ -459,7 +465,7 @@ describe('Handler Functions', () => {
         return Promise.reject(new Error('Unexpected'));
       });
 
-      handler = require('../../handler');
+      handler = loadHandler();
 
       const result = await handler.getMessages({ headers: {} });
 
@@ -469,7 +475,6 @@ describe('Handler Functions', () => {
     });
 
     test('getNumber returns 500 on API error', async () => {
-      jest.resetModules();
       mockFetch.mockReset();
 
       mockFetch.mockImplementation((url) => {
@@ -482,7 +487,7 @@ describe('Handler Functions', () => {
         return Promise.reject(new Error('Network error'));
       });
 
-      handler = require('../../handler');
+      handler = loadHandler();
 
       const result = await handler.getNumber({ headers: {} });
 
@@ -724,11 +729,11 @@ describe('Handler Functions', () => {
 
     const fs = require('fs');
 
-    jest.spyOn(fs, 'existsSync').mockImplementation((filePath) => {
+    vi.spyOn(fs, 'existsSync').mockImplementation((filePath) => {
       return filePath.includes('index.html');
     });
 
-    jest.spyOn(fs, 'readFileSync').mockReturnValue(
+    vi.spyOn(fs, 'readFileSync').mockReturnValue(
       '<!DOCTYPE html><html><head><title>SMS OTP Burner</title></head><body><div id="root"></div></body></html>'
     );
 
@@ -763,8 +768,8 @@ describe('Handler Functions', () => {
 
     const fs = require('fs');
 
-    jest.spyOn(fs, 'existsSync').mockReturnValue(true);
-    jest.spyOn(fs, 'readFileSync').mockReturnValue('body { margin: 0; }');
+    vi.spyOn(fs, 'existsSync').mockReturnValue(true);
+    vi.spyOn(fs, 'readFileSync').mockReturnValue('body { margin: 0; }');
 
     const result = await handler.serveFrontend(event);
 
@@ -783,8 +788,8 @@ describe('Handler Functions', () => {
 
     const fs = require('fs');
 
-    jest.spyOn(fs, 'existsSync').mockReturnValue(true);
-    jest.spyOn(fs, 'readFileSync').mockReturnValue(Buffer.from([0x00, 0x01, 0x02]));
+    vi.spyOn(fs, 'existsSync').mockReturnValue(true);
+    vi.spyOn(fs, 'readFileSync').mockReturnValue(Buffer.from([0x00, 0x01, 0x02]));
 
     const result = await handler.serveFrontend(event);
 
@@ -803,7 +808,7 @@ describe('Handler Functions', () => {
     };
 
     const fs = require('fs');
-    jest.spyOn(fs, 'existsSync').mockImplementation(() => {
+    vi.spyOn(fs, 'existsSync').mockImplementation(() => {
       throw new Error('File system error');
     });
 
@@ -821,7 +826,6 @@ describe('Handler Functions', () => {
   // =====================
   describe('Additional API routing', () => {
     beforeEach(() => {
-      jest.resetModules();
       mockFetch.mockReset();
       mockFetch.mockImplementation((url) => {
         if (url.includes('oauth/token')) {
@@ -842,7 +846,7 @@ describe('Handler Functions', () => {
         }
         return Promise.reject(new Error('Unexpected'));
       });
-      handler = require('../../handler');
+      handler = loadHandler();
     });
 
     test('api routes GET /messages correctly', async () => {
@@ -983,10 +987,9 @@ describe('Handler Functions', () => {
   describe('sanitizeLogData', () => {
     test('sanitizeLogData redacts sensitive fields in headers', async () => {
       process.env.DEBUG = 'true';
-      jest.resetModules();
       mockFetch.mockReset();
 
-      const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
+      const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
 
       mockFetch.mockImplementation((url) => {
         if (url.includes('oauth/token')) {
@@ -1001,7 +1004,7 @@ describe('Handler Functions', () => {
         return Promise.reject(new Error('Unexpected'));
       });
 
-      handler = require('../../handler');
+      handler = loadHandler();
 
       // Trigger API call with authorization header to test sanitization
       await handler.api({
@@ -1021,10 +1024,9 @@ describe('Handler Functions', () => {
 
     test('sanitizeLogData redacts body field', async () => {
       process.env.DEBUG = 'true';
-      jest.resetModules();
       mockFetch.mockReset();
 
-      const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
+      const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
 
       mockFetch.mockImplementation((url, options) => {
         if (url.includes('oauth/token')) {
@@ -1044,7 +1046,7 @@ describe('Handler Functions', () => {
         return Promise.reject(new Error('Unexpected'));
       });
 
-      handler = require('../../handler');
+      handler = loadHandler();
 
       // Trigger API call with body to test sanitization
       await handler.releaseNumber({
@@ -1063,10 +1065,9 @@ describe('Handler Functions', () => {
   describe('DEBUG mode logging', () => {
     test('log.info outputs data when DEBUG is true', async () => {
       process.env.DEBUG = 'true';
-      jest.resetModules();
       mockFetch.mockReset();
 
-      const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
+      const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
 
       mockFetch.mockImplementation((url) => {
         if (url.includes('oauth/token')) {
@@ -1081,7 +1082,7 @@ describe('Handler Functions', () => {
         return Promise.reject(new Error('Unexpected'));
       });
 
-      handler = require('../../handler');
+      handler = loadHandler();
       await handler.getNumber({ headers: {} });
 
       expect(consoleSpy).toHaveBeenCalled();
@@ -1090,10 +1091,9 @@ describe('Handler Functions', () => {
 
     test('log.warn outputs data when DEBUG is true', async () => {
       process.env.DEBUG = 'true';
-      jest.resetModules();
       mockFetch.mockReset();
 
-      const consoleWarnSpy = jest.spyOn(console, 'warn').mockImplementation();
+      const consoleWarnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
 
       mockFetch.mockImplementation((url, options) => {
         if (url.includes('oauth/token')) {
@@ -1108,7 +1108,7 @@ describe('Handler Functions', () => {
         return Promise.reject(new Error('Unexpected'));
       });
 
-      handler = require('../../handler');
+      handler = loadHandler();
       await handler.leaseNumber({ headers: {} });
 
       consoleWarnSpy.mockRestore();
@@ -1120,7 +1120,6 @@ describe('Handler Functions', () => {
   // =====================
   describe('releaseNumber additional tests', () => {
     test('releaseNumber returns 500 when fetchAllVirtualNumbers fails', async () => {
-      jest.resetModules();
       mockFetch.mockReset();
 
       mockFetch.mockImplementation((url) => {
@@ -1137,7 +1136,7 @@ describe('Handler Functions', () => {
         return Promise.reject(new Error('Unexpected'));
       });
 
-      handler = require('../../handler');
+      handler = loadHandler();
 
       const result = await handler.releaseNumber({
         headers: {},
@@ -1150,7 +1149,6 @@ describe('Handler Functions', () => {
     });
 
     test('releaseNumber handles API error (non-404)', async () => {
-      jest.resetModules();
       mockFetch.mockReset();
 
       mockFetch.mockImplementation((url, options) => {
@@ -1171,7 +1169,7 @@ describe('Handler Functions', () => {
         return Promise.reject(new Error('Unexpected'));
       });
 
-      handler = require('../../handler');
+      handler = loadHandler();
 
       const result = await handler.releaseNumber({
         headers: {},
@@ -1184,7 +1182,6 @@ describe('Handler Functions', () => {
     });
 
     test('releaseNumber uses phoneNumber field from body', async () => {
-      jest.resetModules();
       mockFetch.mockReset();
 
       mockFetch.mockImplementation((url, options) => {
@@ -1205,7 +1202,7 @@ describe('Handler Functions', () => {
         return Promise.reject(new Error('Unexpected'));
       });
 
-      handler = require('../../handler');
+      handler = loadHandler();
 
       const result = await handler.releaseNumber({
         headers: {},
@@ -1228,8 +1225,8 @@ describe('Handler Functions', () => {
       };
 
       const fs = require('fs');
-      jest.spyOn(fs, 'existsSync').mockReturnValue(true);
-      jest.spyOn(fs, 'readFileSync').mockReturnValue('console.log("test");');
+      vi.spyOn(fs, 'existsSync').mockReturnValue(true);
+      vi.spyOn(fs, 'readFileSync').mockReturnValue('console.log("test");');
 
       const result = await handler.serveFrontend(event);
 
@@ -1248,8 +1245,8 @@ describe('Handler Functions', () => {
       };
 
       const fs = require('fs');
-      jest.spyOn(fs, 'existsSync').mockReturnValue(true);
-      jest.spyOn(fs, 'readFileSync').mockReturnValue(Buffer.from([0x89, 0x50, 0x4e, 0x47]));
+      vi.spyOn(fs, 'existsSync').mockReturnValue(true);
+      vi.spyOn(fs, 'readFileSync').mockReturnValue(Buffer.from([0x89, 0x50, 0x4e, 0x47]));
 
       const result = await handler.serveFrontend(event);
 
@@ -1268,7 +1265,7 @@ describe('Handler Functions', () => {
       };
 
       const fs = require('fs');
-      jest.spyOn(fs, 'existsSync').mockReturnValue(false);
+      vi.spyOn(fs, 'existsSync').mockReturnValue(false);
 
       const result = await handler.serveFrontend(event);
 
@@ -1285,10 +1282,10 @@ describe('Handler Functions', () => {
       };
 
       const fs = require('fs');
-      jest.spyOn(fs, 'existsSync').mockImplementation((filePath) => {
+      vi.spyOn(fs, 'existsSync').mockImplementation((filePath) => {
         return filePath.includes('index.html');
       });
-      jest.spyOn(fs, 'readFileSync').mockReturnValue('<html><body>SPA</body></html>');
+      vi.spyOn(fs, 'readFileSync').mockReturnValue('<html><body>SPA</body></html>');
 
       const result = await handler.serveFrontend(event);
 
@@ -1306,8 +1303,8 @@ describe('Handler Functions', () => {
       };
 
       const fs = require('fs');
-      jest.spyOn(fs, 'existsSync').mockReturnValue(true);
-      jest.spyOn(fs, 'readFileSync').mockReturnValue('<html></html>');
+      vi.spyOn(fs, 'existsSync').mockReturnValue(true);
+      vi.spyOn(fs, 'readFileSync').mockReturnValue('<html></html>');
 
       const result = await handler.serveFrontend(event);
 
@@ -1324,8 +1321,8 @@ describe('Handler Functions', () => {
       };
 
       const fs = require('fs');
-      jest.spyOn(fs, 'existsSync').mockReturnValue(true);
-      jest.spyOn(fs, 'readFileSync').mockReturnValue('<html></html>');
+      vi.spyOn(fs, 'existsSync').mockReturnValue(true);
+      vi.spyOn(fs, 'readFileSync').mockReturnValue('<html></html>');
 
       const result = await handler.serveFrontend(event);
 
@@ -1342,8 +1339,8 @@ describe('Handler Functions', () => {
       };
 
       const fs = require('fs');
-      jest.spyOn(fs, 'existsSync').mockReturnValue(true);
-      jest.spyOn(fs, 'readFileSync').mockReturnValue('{"name": "test"}');
+      vi.spyOn(fs, 'existsSync').mockReturnValue(true);
+      vi.spyOn(fs, 'readFileSync').mockReturnValue('{"name": "test"}');
 
       const result = await handler.serveFrontend(event);
 
@@ -1361,7 +1358,6 @@ describe('Handler Functions', () => {
   // =====================
   describe('Telstra API error handling', () => {
     test('getTelstraAccessToken clears cache on auth failure', async () => {
-      jest.resetModules();
       mockFetch.mockReset();
 
       mockFetch.mockImplementation((url) => {
@@ -1371,7 +1367,7 @@ describe('Handler Functions', () => {
         return Promise.reject(new Error('Unexpected'));
       });
 
-      handler = require('../../handler');
+      handler = loadHandler();
 
       const result = await handler.getNumber({ headers: {} });
 
@@ -1379,7 +1375,6 @@ describe('Handler Functions', () => {
     });
 
     test('callTelstraApi handles non-JSON error response', async () => {
-      jest.resetModules();
       mockFetch.mockReset();
 
       mockFetch.mockImplementation((url) => {
@@ -1399,7 +1394,7 @@ describe('Handler Functions', () => {
         return Promise.reject(new Error('Unexpected'));
       });
 
-      handler = require('../../handler');
+      handler = loadHandler();
 
       const result = await handler.getNumber({ headers: {} });
 
@@ -1441,7 +1436,6 @@ describe('Handler Functions', () => {
   // =====================
   describe('getAllVirtualNumbers error handling', () => {
     test('getAllVirtualNumbers returns empty array on API error', async () => {
-      jest.resetModules();
       mockFetch.mockReset();
 
       mockFetch.mockImplementation((url) => {
@@ -1457,7 +1451,7 @@ describe('Handler Functions', () => {
         return Promise.reject(new Error('Unexpected'));
       });
 
-      handler = require('../../handler');
+      handler = loadHandler();
 
       const result = await handler.getAllVirtualNumbers({ headers: {} });
 
@@ -1473,7 +1467,6 @@ describe('Handler Functions', () => {
   // =====================
   describe('getMessages fetchAllVirtualNumbers error', () => {
     test('getMessages returns 404 when fetchAllVirtualNumbers fails', async () => {
-      jest.resetModules();
       mockFetch.mockReset();
 
       mockFetch.mockImplementation((url) => {
@@ -1489,7 +1482,7 @@ describe('Handler Functions', () => {
         return Promise.reject(new Error('Unexpected'));
       });
 
-      handler = require('../../handler');
+      handler = loadHandler();
 
       const result = await handler.getMessages({ headers: {} });
 
@@ -1505,7 +1498,6 @@ describe('Handler Functions', () => {
   // =====================
   describe('fetchAllVirtualNumbers edge cases', () => {
     test('fetchAllVirtualNumbers handles null data', async () => {
-      jest.resetModules();
       mockFetch.mockReset();
 
       mockFetch.mockImplementation((url) => {
@@ -1521,7 +1513,7 @@ describe('Handler Functions', () => {
         return Promise.reject(new Error('Unexpected'));
       });
 
-      handler = require('../../handler');
+      handler = loadHandler();
 
       const result = await handler.getAllVirtualNumbers({ headers: {} });
 
@@ -1531,7 +1523,6 @@ describe('Handler Functions', () => {
     });
 
     test('fetchAllVirtualNumbers handles response with empty virtualNumbers array', async () => {
-      jest.resetModules();
       mockFetch.mockReset();
 
       mockFetch.mockImplementation((url) => {
@@ -1547,7 +1538,7 @@ describe('Handler Functions', () => {
         return Promise.reject(new Error('Unexpected'));
       });
 
-      handler = require('../../handler');
+      handler = loadHandler();
 
       const result = await handler.getAllVirtualNumbers({ headers: {} });
 
@@ -1562,7 +1553,6 @@ describe('Handler Functions', () => {
   // =====================
   describe('getMessages edge cases', () => {
     test('getMessages handles messages with alternative field names', async () => {
-      jest.resetModules();
       mockFetch.mockReset();
 
       mockFetch.mockImplementation((url) => {
@@ -1590,7 +1580,7 @@ describe('Handler Functions', () => {
         return Promise.reject(new Error('Unexpected'));
       });
 
-      handler = require('../../handler');
+      handler = loadHandler();
 
       const result = await handler.getMessages({ headers: {} });
 
@@ -1601,7 +1591,6 @@ describe('Handler Functions', () => {
     });
 
     test('getMessages handles null messages array', async () => {
-      jest.resetModules();
       mockFetch.mockReset();
 
       mockFetch.mockImplementation((url) => {
@@ -1622,7 +1611,7 @@ describe('Handler Functions', () => {
         return Promise.reject(new Error('Unexpected'));
       });
 
-      handler = require('../../handler');
+      handler = loadHandler();
 
       const result = await handler.getMessages({ headers: {} });
 
@@ -1639,7 +1628,6 @@ describe('Handler Functions', () => {
     test('leaseNumber respects MAX_LEASED_NUMBER_COUNT of 2', async () => {
       process.env.MAX_LEASED_NUMBER_COUNT = '2';
 
-      jest.resetModules();
       mockFetch.mockReset();
 
       let postCount = 0;
@@ -1662,7 +1650,7 @@ describe('Handler Functions', () => {
         return Promise.reject(new Error('Unexpected'));
       });
 
-      handler = require('../../handler');
+      handler = loadHandler();
 
       const result = await handler.leaseNumber({ headers: {} });
 
@@ -1675,7 +1663,6 @@ describe('Handler Functions', () => {
     test('leaseNumber uses default MAX_LEASED_NUMBER_COUNT of 1', async () => {
       delete process.env.MAX_LEASED_NUMBER_COUNT;
 
-      jest.resetModules();
       mockFetch.mockReset();
 
       mockFetch.mockImplementation((url, options) => {
@@ -1696,7 +1683,7 @@ describe('Handler Functions', () => {
         return Promise.reject(new Error('Unexpected'));
       });
 
-      handler = require('../../handler');
+      handler = loadHandler();
 
       const result = await handler.leaseNumber({ headers: {} });
 
@@ -1742,7 +1729,6 @@ describe('Handler Functions', () => {
   // =====================
   describe('API exception handling', () => {
     test('api handles routing correctly with valid routes', async () => {
-      jest.resetModules();
       mockFetch.mockReset();
 
       mockFetch.mockImplementation((url) => {
@@ -1760,7 +1746,7 @@ describe('Handler Functions', () => {
         return Promise.reject(new Error('Unexpected'));
       });
 
-      handler = require('../../handler');
+      handler = loadHandler();
 
       const event = {
         httpMethod: 'POST',
@@ -1782,7 +1768,6 @@ describe('Handler Functions', () => {
     test('leaseNumber handles partial success when some numbers fail to lease', async () => {
       process.env.MAX_LEASED_NUMBER_COUNT = '3';
 
-      jest.resetModules();
       mockFetch.mockReset();
 
       let postCallCount = 0;
@@ -1807,7 +1792,7 @@ describe('Handler Functions', () => {
         return Promise.reject(new Error('Unexpected'));
       });
 
-      handler = require('../../handler');
+      handler = loadHandler();
 
       const result = await handler.leaseNumber({ headers: {} });
 
@@ -1818,7 +1803,6 @@ describe('Handler Functions', () => {
     });
 
     test('leaseNumber handles complete failure to lease new numbers', async () => {
-      jest.resetModules();
       mockFetch.mockReset();
 
       mockFetch.mockImplementation((url, options) => {
@@ -1838,7 +1822,7 @@ describe('Handler Functions', () => {
         return Promise.reject(new Error('Unexpected'));
       });
 
-      handler = require('../../handler');
+      handler = loadHandler();
 
       const result = await handler.leaseNumber({ headers: {} });
 
@@ -1848,7 +1832,6 @@ describe('Handler Functions', () => {
     });
 
     test('leaseNumber handles fetchAllVirtualNumbers error gracefully', async () => {
-      jest.resetModules();
       mockFetch.mockReset();
 
       mockFetch.mockImplementation((url, options) => {
@@ -1868,7 +1851,7 @@ describe('Handler Functions', () => {
         return Promise.reject(new Error('Unexpected'));
       });
 
-      handler = require('../../handler');
+      handler = loadHandler();
 
       const result = await handler.leaseNumber({ headers: {} });
 
@@ -1885,7 +1868,6 @@ describe('Handler Functions', () => {
   // =====================
   describe('callTelstraApi edge cases', () => {
     test('callTelstraApi includes params in URL', async () => {
-      jest.resetModules();
       mockFetch.mockReset();
 
       let capturedUrl = '';
@@ -1908,7 +1890,7 @@ describe('Handler Functions', () => {
         return Promise.reject(new Error('Unexpected'));
       });
 
-      handler = require('../../handler');
+      handler = loadHandler();
 
       await handler.getMessages({ headers: {} });
 
@@ -1929,7 +1911,7 @@ describe('Handler Functions', () => {
       };
 
       const fs = require('fs');
-      jest.spyOn(fs, 'existsSync').mockReturnValue(false);
+      vi.spyOn(fs, 'existsSync').mockReturnValue(false);
 
       const result = await handler.serveFrontend(event);
 
@@ -1944,7 +1926,6 @@ describe('Handler Functions', () => {
   // =====================
   describe('formatVirtualNumber', () => {
     test('formats virtual number with expiry date', async () => {
-      jest.resetModules();
       mockFetch.mockReset();
 
       mockFetch.mockImplementation((url) => {
@@ -1964,7 +1945,7 @@ describe('Handler Functions', () => {
         return Promise.reject(new Error('Unexpected'));
       });
 
-      handler = require('../../handler');
+      handler = loadHandler();
 
       const result = await handler.getAllVirtualNumbers({ headers: {} });
 
@@ -1975,10 +1956,9 @@ describe('Handler Functions', () => {
 
     test('sanitizeLogData redacts top-level sensitive fields', async () => {
       process.env.DEBUG = 'true';
-      jest.resetModules();
       mockFetch.mockReset();
 
-      const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
+      const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
 
       mockFetch.mockImplementation((url) => {
         if (url.includes('oauth/token')) {
@@ -1993,7 +1973,7 @@ describe('Handler Functions', () => {
         return Promise.reject(new Error('Unexpected'));
       });
 
-      handler = require('../../handler');
+      handler = loadHandler();
 
       // log.info('API request', data) is called with { method, path }
       // We need to trigger sanitizeLogData with data that has a sensitive top-level field.
@@ -2016,14 +1996,13 @@ describe('Handler Functions', () => {
     });
 
     test('api catch block handles unexpected routing errors', async () => {
-      jest.resetModules();
       mockFetch.mockReset();
 
-      handler = require('../../handler');
+      handler = loadHandler();
 
       // Override leaseNumber on module.exports to throw
       const originalLeaseNumber = handler.leaseNumber;
-      handler.leaseNumber = jest.fn(() => {
+      handler.leaseNumber = vi.fn(() => {
         throw new Error('Unexpected crash');
       });
 
@@ -2040,7 +2019,6 @@ describe('Handler Functions', () => {
     });
 
     test('leaseNumber outer catch handles unexpected errors', async () => {
-      jest.resetModules();
       mockFetch.mockReset();
 
       mockFetch.mockImplementation((url) => {
@@ -2051,44 +2029,25 @@ describe('Handler Functions', () => {
           }));
         }
         if (url.includes('virtual-numbers')) {
+          // Passes fetchAllVirtualNumbers' length check, then throws inside leaseNumber's outer try.
           return Promise.resolve(createFetchResponse({
-            virtualNumbers: [],
+            virtualNumbers: { length: 1, map: () => { throw new Error('Simulated crash'); } },
           }));
         }
         return Promise.reject(new Error('Unexpected'));
       });
 
-      handler = require('../../handler');
+      handler = loadHandler();
 
-      // Temporarily make Array.prototype.map throw to trigger the outer catch
-      // after fetchAllVirtualNumbers succeeds (line 301: existingNumbers.map(...))
-      const originalMap = Array.prototype.map;
-      let shouldThrow = false;
+      const result = await handler.leaseNumber({
+        headers: { origin: 'http://localhost:3000' },
+      });
 
-      try {
-        Array.prototype.map = function(...args) {
-          if (shouldThrow) {
-            shouldThrow = false;
-            throw new Error('Simulated crash');
-          }
-          return originalMap.apply(this, args);
-        };
-
-        shouldThrow = true;
-
-        const result = await handler.leaseNumber({
-          headers: { origin: 'http://localhost:3000' },
-        });
-
-        expect(result.statusCode).toBe(500);
-        expect(JSON.parse(result.body).message).toBe('Failed to lease numbers');
-      } finally {
-        Array.prototype.map = originalMap;
-      }
+      expect(result.statusCode).toBe(500);
+      expect(JSON.parse(result.body).message).toBe('Failed to lease numbers');
     });
 
     test('formats virtual number without expiry date', async () => {
-      jest.resetModules();
       mockFetch.mockReset();
 
       mockFetch.mockImplementation((url) => {
@@ -2106,7 +2065,7 @@ describe('Handler Functions', () => {
         return Promise.reject(new Error('Unexpected'));
       });
 
-      handler = require('../../handler');
+      handler = loadHandler();
 
       const result = await handler.getNumber({ headers: {} });
 
@@ -2119,11 +2078,10 @@ describe('Handler Functions', () => {
   describe('edge case branches', () => {
     test('ALLOWED_ORIGINS uses default when env var is not set', async () => {
       delete process.env.ALLOWED_ORIGINS;
-      jest.resetModules();
       mockFetch.mockReset();
       mockFetch.mockRejectedValue(new Error('Network error'));
 
-      handler = require('../../handler');
+      handler = loadHandler();
 
       const result = await handler.api({
         httpMethod: 'OPTIONS',
@@ -2138,10 +2096,9 @@ describe('Handler Functions', () => {
 
     test('log.warn uses sanitizeLogData when DEBUG is true', async () => {
       process.env.DEBUG = 'true';
-      jest.resetModules();
       mockFetch.mockReset();
 
-      const consoleSpy = jest.spyOn(console, 'warn').mockImplementation();
+      const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
 
       mockFetch.mockImplementation((url) => {
         if (url.includes('oauth/token')) {
@@ -2161,7 +2118,7 @@ describe('Handler Functions', () => {
         return Promise.reject(new Error('Unexpected'));
       });
 
-      handler = require('../../handler');
+      handler = loadHandler();
 
       await handler.leaseNumber({
         headers: { origin: 'http://localhost:3000' },
@@ -2215,7 +2172,6 @@ describe('Handler Functions', () => {
     test('serveFrontend falls back to application/octet-stream for unknown MIME type', async () => {
       const fs = require('fs');
       const path = require('path');
-      jest.resetModules();
       mockFetch.mockReset();
 
       // Create a file with an unknown extension in the build directory
@@ -2227,7 +2183,7 @@ describe('Handler Functions', () => {
       fs.writeFileSync(testFile, Buffer.from('binary content'));
 
       try {
-        handler = require('../../handler');
+        handler = loadHandler();
 
         const result = await handler.serveFrontend({
           path: '/testfile.xyz123',
