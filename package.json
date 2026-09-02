@@ -6,53 +6,48 @@
   "license": "MIT",
   "scripts": {
     "start:backend": "export $(cat .env | xargs) && serverless offline start",
-    "start:react": "react-scripts start",
-    "build:react": "DISABLE_ESLINT_PLUGIN=true react-scripts build",
-    "test:frontend": "react-scripts test --testPathIgnorePatterns=src/__tests__/backend --testPathIgnorePatterns=src/__tests__/__mocks__",
+    "start:react": "vite",
+    "build:react": "vite build",
+    "preview:react": "vite preview",
+    "test:frontend": "vitest run",
+    "test:frontend:watch": "vitest",
     "test:backend": "jest --config=jest.backend.config.js",
     "test:ui": "playwright test",
     "test:ui:headed": "playwright test --headed",
     "test:ui:debug": "playwright test --debug",
-    "test": "yarn test:frontend --watchAll=false && yarn test:backend",
+    "test": "yarn test:frontend && yarn test:backend",
     "lint": "eslint src/ --max-warnings 0",
     "start": "concurrently \"yarn start:backend\" \"yarn start:react\"",
     "deploy": "yarn build:react && serverless deploy",
     "clean": "rm -rf node_modules yarn.lock && yarn install"
   },
   "dependencies": {
-    "@testing-library/dom": "^10.4.1",
-    "@testing-library/jest-dom": "^6.9.1",
-    "@testing-library/react": "^16.3.0",
-    "@testing-library/user-event": "^14.6.1",
     "mime-types": "^3.0.2",
     "react": "^19.2.1",
-    "react-dom": "^19.2.1",
-    "react-scripts": "5.0.1",
-    "web-vitals": "^5.1.0"
+    "react-dom": "^19.2.1"
   },
   "devDependencies": {
     "@eslint/compat": "^2.0.0",
     "@eslint/js": "^10.0.0",
     "@playwright/test": "^1.49.1",
-    "babel-jest": "^30.2.0",
+    "@testing-library/dom": "^10.4.1",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.0",
+    "@testing-library/user-event": "^14.6.1",
+    "@vitejs/plugin-react": "^6.1.1",
+    "@vitest/coverage-v8": "^4.1.11",
     "concurrently": "^9.2.1",
     "eslint": "^10.0.0",
     "eslint-plugin-react": "^7.37.0",
     "eslint-plugin-react-hooks": "^5.2.0",
     "globals": "^16.0.0",
-    "identity-obj-proxy": "^3.0.0",
     "jest": "^30.2.0",
-    "jest-transform-css": "^6.0.3",
+    "jsdom": "^26.0.0",
     "serverless": "^4.35.0",
     "serverless-dotenv-plugin": "^6.0.0",
-    "serverless-offline": "^14.4.0"
-  },
-  "jest": {
-    "collectCoverageFrom": [
-      "src/**/*.js",
-      "!src/index.js",
-      "!src/__tests__/**"
-    ]
+    "serverless-offline": "^14.4.0",
+    "vite": "^8.2.2",
+    "vitest": "^4.1.11"
   },
   "browserslist": {
     "production": [
@@ -65,10 +60,5 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
-  },
-  "resolutions": {
-    "nth-check": "^2.0.1",
-    "postcss": "^8.4.31",
-    "webpack-dev-server": "^5.2.1"
   }
 }

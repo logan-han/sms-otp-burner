@@ -30,7 +30,7 @@ export default [
   // React frontend files
   {
     ...reactBaseConfig,
-    files: ["src/**/*.js"],
+    files: ["src/**/*.{js,jsx}"],
     ignores: ["src/handler.js", "src/lib/**", "src/__tests__/**"],
     languageOptions: {
       ...reactBaseConfig.languageOptions,
@@ -68,16 +68,16 @@ export default [
     },
   },
 
-  // Frontend test files (Browser + Jest + React)
+  // Frontend test files (Browser + Vitest + React)
   {
     ...reactBaseConfig,
-    files: ["src/__tests__/*.test.js"],
+    files: ["src/__tests__/*.test.{js,jsx}"],
     ignores: ["src/__tests__/backend/**"],
     languageOptions: {
       ...reactBaseConfig.languageOptions,
       globals: {
         ...globals.browser,
-        ...globals.jest,
+        ...globals.vitest,
         global: "readonly",
         process: "readonly",
       },

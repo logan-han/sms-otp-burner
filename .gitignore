@@ -158,3 +158,6 @@ playwright/.cache/
 
 # Lambda deployment packages
 *.zip
+
+# Local agent/tool settings
+.claude/
