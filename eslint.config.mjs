@@ -54,13 +54,13 @@ export default [
     },
   },
 
-  // Backend tests and mocks (Node.js / CommonJS + Jest)
+  // Backend tests (Node.js / CommonJS + Vitest)
   {
-    files: ["src/__tests__/backend/**/*.js", "src/__tests__/__mocks__/**/*.js"],
+    files: ["src/__tests__/backend/**/*.js"],
     languageOptions: {
       globals: {
         ...globals.node,
-        ...globals.jest,
+        ...globals.vitest,
       },
     },
     rules: {
