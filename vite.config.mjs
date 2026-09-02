@@ -25,14 +25,29 @@ export default defineConfig({
   },
   test: {
     globals: true,
-    environment: 'jsdom',
-    // The backend suite stays on jest (see jest.backend.config.js).
-    include: ['src/__tests__/*.test.{js,jsx}'],
+    projects: [
+      {
+        extends: true,
+        test: {
+          name: 'frontend',
+          environment: 'jsdom',
+          include: ['src/__tests__/*.test.{js,jsx}'],
+        },
+      },
+      {
+        extends: true,
+        test: {
+          name: 'backend',
+          environment: 'node',
+          include: ['src/__tests__/backend/**/*.test.js'],
+        },
+      },
+    ],
     coverage: {
       provider: 'v8',
       reporter: ['text', 'lcov'],
       include: ['src/**/*.{js,jsx}'],
-      exclude: ['src/index.js', 'src/__tests__/**', 'src/handler.js', 'src/lib/**'],
+      exclude: ['src/index.js', 'src/__tests__/**'],
     },
   },
 });

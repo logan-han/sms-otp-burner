@@ -33,14 +33,8 @@ jobs:
       - name: Lint code
         run: yarn lint
 
-      - name: Run frontend tests
-        run: yarn test:frontend --coverage
-
-      - name: Run backend tests
-        run: yarn test:backend --ci --coverage
-        env:
-          TELSTRA_CLIENT_ID: test_client_id
-          TELSTRA_CLIENT_SECRET: test_client_secret
+      - name: Run unit tests
+        run: yarn test --coverage
 
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@v5
