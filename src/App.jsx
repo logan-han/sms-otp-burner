@@ -27,7 +27,7 @@ function App() {
   const [isLeasing, setIsLeasing] = useState(false);
   const [maxLeaseCount, setMaxLeaseCount] = useState(null);
   const [error, setError] = useState(null);
-  const [now, setNow] = useState(Date.now());
+  const [now, setNow] = useState(() => Date.now());
   const [expandedId, setExpandedId] = useState(null);
 
   const { copy, copiedKey, toast } = useClipboardCopy();
@@ -81,21 +81,22 @@ function App() {
 
   useEffect(() => {
     let cancelled = false;
-    setIsLoading(true);
-    setError(null);
-    loadVirtualNumbers()
-      .then(async (numbers) => {
+    const init = async () => {
+      try {
+        const numbers = await loadVirtualNumbers();
         if (cancelled) return;
         if (numbers.length === 0) {
           await lease();
         } else {
           await loadMessages();
         }
-      })
-      .catch((err) => setError(composeError('Failed to fetch current numbers', err)))
-      .finally(() => {
+      } catch (err) {
+        setError(composeError('Failed to fetch current numbers', err));
+      } finally {
         if (!cancelled) setIsLoading(false);
-      });
+      }
+    };
+    init();
     return () => {
       cancelled = true;
     };
